@@ -1,29 +1,29 @@
-package util;
+package model;
 
 /**
- * This class represents an ADT of a coordinate in the board.
+ * This class represents an ADT of a  (x,y) coordinate of an agent in the board.
  *
  * @version 1.0
  */
 public class Coordinate implements Comparable<Coordinate> {
-    /** Contains the number of row. */
-    private final int row;
-
     /** Contains the number of column. */
-    private final int column;
+    private final int x;
+
+    /** Contains the number of row. */
+    private final int y;
 
     /**
      * Constructor that creates a new Coordinate instance.
      *
      * @requires row >= 0 &amp; column >= 0
-     * @modifies {@link #row}, {@link #column}
-     * @effects {@code this.row = row; this.column = column}
-     * @param row the number of row
-     * @param column the number of column
+     * @modifies {@link #y}, {@link #x}
+     * @effects {@code this.x = x; this.y = y}
+     * @param x the number of column
+     * @param y the number of row
      */
-    public Coordinate(final int row, final int column) {
-        this.row = row;
-        this.column = column;
+    public Coordinate(final int x, final int y) {
+        this.x = x;
+        this.y = y;
     }
 
     /**
@@ -31,8 +31,8 @@ public class Coordinate implements Comparable<Coordinate> {
      *
      * @return the number of row
      */
-    public int getRow() {
-        return row;
+    public int getY() {
+        return y;
     }
 
     /**
@@ -40,12 +40,14 @@ public class Coordinate implements Comparable<Coordinate> {
      *
      * @return the number of column
      */
-    public int getColumn() {
-        return column;
+    public int getX() {
+        return x;
     }
 
     /**
-     * Gets the neighbor coordinate following a certain direction.
+     * Gets the neighbor coordinate following a certain direction with the convention for
+     * positions that (0,0) is the upper left corner, x increases horizontally and y
+     * increases vertically.
      *
      * @param d the direction
      * @return the new coordinate next to the old one
@@ -53,13 +55,13 @@ public class Coordinate implements Comparable<Coordinate> {
     public Coordinate next(Direction d) {
         switch (d) {
             case UP:
-                return new Coordinate(this.row - 1, column);
+                return new Coordinate(this.y - 1, x);
             case DOWN:
-                return new Coordinate(this.row + 1, column);
+                return new Coordinate(this.y + 1, x);
             case RIGHT:
-                return new Coordinate(this.row, this.column + 1);
+                return new Coordinate(this.y, this.x + 1);
             case LEFT:
-                return new Coordinate(this.row, this.column - 1);
+                return new Coordinate(this.y, this.x - 1);
             default:
                 return null;
         }
@@ -106,15 +108,15 @@ public class Coordinate implements Comparable<Coordinate> {
      */
     @Override
     public int compareTo(Coordinate that) {
-        if (this.row < that.row) {
+        if (this.y < that.y) {
             return -1;
-        } else if (this.row > that.row) {
+        } else if (this.y > that.y) {
             return 1;
         }
 
-        if (this.column < that.column) {
+        if (this.x < that.x) {
             return -1;
-        } else if (this.column > that.column) {
+        } else if (this.x > that.x) {
             return 1;
         }
         return 0;
@@ -175,7 +177,7 @@ public class Coordinate implements Comparable<Coordinate> {
             return false;
         }
         Coordinate that = (Coordinate) o;
-        return row == that.row && column == that.column;
+        return y == that.y && x == that.x;
     }
 
     /**
@@ -215,7 +217,7 @@ public class Coordinate implements Comparable<Coordinate> {
      */
     @Override
     public int hashCode() {
-        return row + (column + (((row + 1) / 2) * ((row + 1) / 2))); // bijective function
+        return y + (x + (((y + 1) / 2) * ((y + 1) / 2))); // bijective function
     }
 
     /**
@@ -229,6 +231,6 @@ public class Coordinate implements Comparable<Coordinate> {
      * @return  a string representation of the object.
      */
     public String toString() {
-        return "(" + (row + 1) + ", " + (column + 1) + ")";
+        return "(" + (y + 1) + ", " + (x + 1) + ")";
     }
 }

@@ -1,0 +1,9 @@
+; Contains a very simple maze: used to test if drawMaze() works
+; 7 columns
+; 5 rows
+
++++++++
++P +  +
++     +
++  + .+
++++++++
