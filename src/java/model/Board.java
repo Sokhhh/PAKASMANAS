@@ -107,6 +107,10 @@ public class Board {
         return this.data[y][x];
     }
 
+    public boolean isValidDirection(int x, int y, final Direction d) {
+        return this.get(x + d.getDirectionX(), y + d.getDirectionY()) > Board.WALL;
+    }
+
     public static final int SURROUNDING_RIGHT = 0;
     public static final int SURROUNDING_DOWN = 1;
     public static final int SURROUNDING_LEFT = 2;

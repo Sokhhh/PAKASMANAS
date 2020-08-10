@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import javax.swing.AbstractAction;
 import javax.swing.ActionMap;
 import javax.swing.ImageIcon;
@@ -20,150 +22,187 @@ import javax.swing.Timer;
 import model.Board;
 import model.Direction;
 import util.BoardParser;
-import util.Logger;
 
 public class AbstractCharacterIcon extends JLabel {
+    /** Contains the size of horizontal screen distance moved in each movement animation. */
+    private final int deltaX;
 
-    private int deltaX;
-    private int deltaY;
+    /** Contains the size of vertical screen distance moved in each movement animation. */
+    private final int deltaY;
+
+    /** Contains the milliseconds of delay between each step of movement animation. */
+    private final int delay;
+
+    /** Contains the game maze. */
+    private final Board board;
+
+    /** Contains the x coordinate of the icon in the board. */
     private int coordinateX;
+
+    /** Contains the y coordinate of the icon in the board. */
     private int coordinateY;
-    private Direction motionDirection = Direction.STOP;
-    private Board board;
 
+    /** Contains the movement direction of the icon. */
+    private Direction direction;
 
-    private class ChangeDirection extends AbstractAction {
+    /** Contains the icon of the character. */
+    private final ImageIcon icon;
 
-        private Direction newDirection;
+    /** Contains the timer to constantly move the character. */
+    private final Timer autoMoving;
 
-        public ChangeDirection(Direction newDirection) {
+    /**
+     * Contains a queue that stores the pending changed directions inputted by the
+     * user.
+     */
+    private final ConcurrentLinkedQueue<Direction> pendingDirections =
+        new ConcurrentLinkedQueue<>();
+
+    /**
+     * Contains an Action object that applied when the user inputs a new direction. It
+     * checks if that direction can be applied immediately: if so, it changes to that
+     * direction; otherwise, it puts the direction into a queue.
+     */
+    private class NewDirectionAction extends AbstractAction {
+        /**
+         * Contains the user specified new direction.
+         */
+        private final Direction newDirection;
+
+        /**
+         * Creates a new NewDirectionAction object.
+         *
+         * @param newDirection the user specified new direction
+         */
+        public NewDirectionAction(Direction newDirection) {
             this.newDirection = newDirection;
         }
 
+        /**
+         * Invoked when an action occurs.
+         * @param e the action event
+         */
         @Override
         public void actionPerformed(ActionEvent e) {
-            motionDirection = newDirection;
+            if (direction != newDirection) {
+                if (board.isValidDirection(coordinateX, coordinateY, newDirection)) {
+                    direction = newDirection;
+                } else {
+                    pendingDirections.add(newDirection);
+                }
+            }
         }
     }
 
-    private int getLocationX() {
-        return getLocation().x;
-    }
-    private int getLocationY() {
-        return getLocation().y;
-    }
-
-    private boolean checkX() {
-        return getLocation().x % (double) BLOCK_SIZE != 0;
-    }
-    private boolean checkY() {
-        return getLocation().y % (double) BLOCK_SIZE != 0;
-    }
-
-    JPanel parent;
-
-    public AbstractCharacterIcon(int startCoordinateX, int startCoordinateY, int delay, Board board, JPanel parent) {
-        this.deltaX = 10;
-        this.deltaY = 10;
+    /**
+     * Constructor that creates a new AbstractCharacterIcon.
+     *
+     * @param board  the game maze
+     * @param startCoordinateX the start x coordinate of the icon in the board
+     * @param startCoordinateY the start y coordinate of the icon in the board
+     * @param delay the milliseconds of delay between each step of movement animation
+     */
+    public AbstractCharacterIcon(final Board board, int startCoordinateX,
+        int startCoordinateY, int delay) {
+        this.deltaX = BLOCK_SIZE / 5;
+        this.deltaY = BLOCK_SIZE / 5;
+        this.delay = delay;
+        this.board = board;
         this.coordinateX = startCoordinateX;
         this.coordinateY = startCoordinateY;
-        this.board = board;
-        this.parent = parent;
+        this.direction = Direction.STOP;
 
+        // Set hotkeys
         setKeyBindings(Direction.LEFT, KeyEvent.VK_LEFT);
         setKeyBindings(Direction.RIGHT, KeyEvent.VK_RIGHT);
         setKeyBindings(Direction.DOWN, KeyEvent.VK_DOWN);
         setKeyBindings(Direction.UP, KeyEvent.VK_UP);
 
-        setIcon(new ImageIcon(new ImageIcon("pacman.gif").getImage().getScaledInstance(BLOCK_SIZE, BLOCK_SIZE, Image.SCALE_DEFAULT)));
-
+        // Changes the image icon of the component
+        icon = new ImageIcon(new ImageIcon("pacman.gif").getImage()
+            .getScaledInstance(BLOCK_SIZE, BLOCK_SIZE, Image.SCALE_DEFAULT));
+        setIcon(icon);
         setSize(new Dimension(BLOCK_SIZE, BLOCK_SIZE));
         setPreferredSize(new Dimension(BLOCK_SIZE, BLOCK_SIZE));
+
+        // Move the icon to the start coordinate in the board
         setLocation(startCoordinateX * MazePanel.BLOCK_SIZE, startCoordinateY * MazePanel.BLOCK_SIZE);
-        // this.start();
+
+        // Start moving
+        this.autoMoving = new Timer(delay * 5, e -> move());
     }
 
-    private void start() {
-        new javax.swing.Timer(40, new ActionListener() {
-            private int counter = 0;
-            private final int num = BLOCK_SIZE / deltaX;
-            private Direction direction = motionDirection;
+    /**
+     * Starts the animation that let the character moves along the direction.
+     */
+    public void startMovingAnimation() {
+        autoMoving.start();
+    }
 
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                counter++;
-                if (counter == 5) {
-                    ((Timer) e.getSource()).stop();
-                }
+    public void move() {
+        final Direction currDirection = direction;
+        if (direction != Direction.STOP) {
+            final int num = BLOCK_SIZE / deltaX;
+            if (board.isValidDirection(coordinateX, coordinateY, currDirection)) {
+                // If next block following current direction is not WALL, go to that block
+                new Timer(delay, new ActionListener() {
+                    private int counter = 0;
 
-                //  Determine next screen position
-                int nextScreenX = AbstractCharacterIcon.this.getLocation().x + (deltaX * direction.getDirectionX());
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        counter++;
+                        if (counter == num) {
+                            ((Timer) e.getSource()).stop();
+                        }
 
-                //  Determine next Y position
-                int nextScreenY = AbstractCharacterIcon.this.getLocation().y + (deltaY * direction.getDirectionY());
+                        //  Determine next screen position
+                        int nextScreenX = AbstractCharacterIcon.this.getLocation().x
+                            + (deltaX * currDirection.getDirectionX());
+                        int nextScreenY = AbstractCharacterIcon.this.getLocation().y
+                            + (deltaY * currDirection.getDirectionY());
 
-                // Check border
-                boolean outOfBounds = false;
-                if (nextScreenX < 0) {
-                    nextScreenX = 0;
-                    outOfBounds = true;
-                } else if (nextScreenX + AbstractCharacterIcon.this.getSize().width > parent.getSize().width) {
-                    nextScreenX = parent.getSize().width - AbstractCharacterIcon.this.getSize().width;
-                    outOfBounds = true;
-                }
-                if (nextScreenY < 0) {
-                    nextScreenY = 0;
-                    outOfBounds = true;
-                } else if (nextScreenY + AbstractCharacterIcon.this.getSize().height > parent.getSize().height) {
-                    nextScreenY = parent.getSize().height - AbstractCharacterIcon.this.getSize().height;
-                    outOfBounds = true;
-                }
-
-                //  Move the image
-                int x = coordinateX;
-                if (direction == Direction.LEFT) {
-                    x = (int) Math.floor(nextScreenX / (double) BLOCK_SIZE);
-                } else if (direction == Direction.RIGHT) {
-                    x = (int) Math.ceil(nextScreenX / (double) BLOCK_SIZE);
-                }
-
-                int y = coordinateY;
-                if (direction == Direction.UP) {
-                    y = (int) Math.floor(nextScreenY / (double) BLOCK_SIZE);
-                } else if (direction == Direction.DOWN) {
-                    y = (int) Math.ceil(nextScreenY / (double) BLOCK_SIZE);
-                }
-
-                if (board.get(x, y) != Board.WALL) {
-                    AbstractCharacterIcon.this.coordinateX = x;
-                    AbstractCharacterIcon.this.coordinateY = y;
-                    setLocation(nextScreenX, nextScreenY);
-                    if (outOfBounds) {
-                        direction = Direction.STOP;
-                        motionDirection = Direction.STOP;
+                        //  Move the image
+                        setLocation(nextScreenX, nextScreenY);
                     }
-                } else {
-                    setLocation(coordinateX * BLOCK_SIZE, coordinateY * BLOCK_SIZE);
-                    direction = Direction.STOP;
-                    motionDirection = Direction.STOP;
-                }
+                }).start();
+                this.coordinateX += currDirection.getDirectionX();
+                this.coordinateY += currDirection.getDirectionY();
+            } else {
+                // Stop if the next block is a wall
+                direction = Direction.STOP;
             }
-        }).start();
+        }
+
+        // Checks for possible direction changes
+        for (Iterator<Direction> iterator = pendingDirections.iterator(); iterator.hasNext(); ) {
+            Direction possibleDirection = iterator.next();
+
+            if (board.isValidDirection(coordinateX, coordinateY, possibleDirection)) {
+                direction = possibleDirection;
+                iterator.remove();
+                return;
+            }
+        }
+        if (currDirection == Direction.STOP) {
+            direction = currDirection;
+            pendingDirections.clear();
+        }
     }
 
+    /**
+     * Binds a hotkey with the action of changing the direction.
+     *
+     * @param newDirection the new direction specified by the user
+     * @param keyCode an int specifying the numeric code for a keyboard key
+     */
     private void setKeyBindings(Direction newDirection, int keyCode) {
-        int condition = WHEN_IN_FOCUSED_WINDOW;
-        InputMap inputMap = getInputMap(condition);
-        ActionMap actionMap = getActionMap();
-
         KeyStroke keyPressed = KeyStroke.getKeyStroke(keyCode, 0, false);
-        KeyStroke keyReleased = KeyStroke.getKeyStroke(keyCode, 0, true);
 
+        InputMap inputMap = getInputMap(WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(keyPressed, keyPressed.toString());
-        inputMap.put(keyReleased, keyReleased.toString());
 
-        actionMap.put(keyPressed.toString(), new ChangeDirection(newDirection));
-        // actionMap.put(keyReleased.toString(), new ChangeDirection(newDirection));
+        ActionMap actionMap = getActionMap();
+        actionMap.put(keyPressed.toString(), new NewDirectionAction(newDirection));
     }
 
     public static void main(String[] args) throws IOException {
@@ -179,13 +218,12 @@ public class AbstractCharacterIcon extends JLabel {
         MazePanel mp = new MazePanel(board);
         mp.setLayout(null);
 
-        AbstractCharacterIcon ta = new AbstractCharacterIcon(1, 1,  40, board, mp);
+        AbstractCharacterIcon ta = new AbstractCharacterIcon(board, 1, 1,  40);
+        ta.startMovingAnimation();
         mp.add(ta);
         frame.setContentPane(mp);
         frame.setLocationRelativeTo(null);
         frame.pack();
         frame.setVisible(true);
-//      frame.getContentPane().add( new TimerAnimation(10, 10, 2, 3, 1, 1, 10) );
-//      frame.getContentPane().add( new TimerAnimation(10, 10, 3, 0, 1, 1, 10) );
     }
 }
