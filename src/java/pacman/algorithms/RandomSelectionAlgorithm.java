@@ -27,7 +27,7 @@ public class RandomSelectionAlgorithm extends AbstractAlgorithm {
      */
     @Override
     public Direction getPacmanAction(int pacmanIndex, int x, int y) {
-        List<Direction> nextDirections = maze.getLegalGhostActions(x, y);
+        List<Direction> nextDirections = maze.getLegalActionsIncludeStop(x, y);
         return EpidemicUtilities.randomSelect(nextDirections);
     }
 
@@ -42,7 +42,7 @@ public class RandomSelectionAlgorithm extends AbstractAlgorithm {
      */
     @Override
     public Direction getGhostAction(String ghostName, int x, int y, boolean isScared) {
-        List<Direction> nextDirections = maze.getLegalGhostActions(x, y);
+        List<Direction> nextDirections = maze.getLegalActionsIncludeStop(x, y);
         return EpidemicUtilities.randomSelect(nextDirections);
     }
 }

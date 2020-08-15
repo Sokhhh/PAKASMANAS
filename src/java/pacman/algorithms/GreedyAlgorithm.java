@@ -5,9 +5,7 @@ import pacman.model.Direction;
 import pacman.model.Maze;
 
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 public class GreedyAlgorithm extends AbstractAlgorithm {
     /**
@@ -39,18 +37,17 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
      * @param y the y coordinate of the action
      * @return the evaluation score of the action
      */
-    private double pacmanEvaluationFunction(int pacmanIndex, int x, int y) {
+    protected double pacmanEvaluationFunction(int pacmanIndex, int x, int y) {
         Set<Coordinate> currFood = maze.getFoods();
         Coordinate[] pellets = maze.getPellets();
         Map<String, Coordinate> currGhostStates = maze.getGhostsLocation();
         Map<String, Integer> currScaredTimes = maze.getGhostScaredTimes();
         int score = 0;
         // check if the current state is the final winning state
-        if (maze.getGhostsLocation().containsValue(new Coordinate(x, y))) {
+        if (maze.isLose(x, y)) {
             // Lose
             return Integer.MIN_VALUE;
-        } else if (maze.getFoods().contains(new Coordinate(x, y))
-                && maze.getFoodsNum() == 1) {
+        } else if (maze.isWin(x, y)) {
             // Win
             return Integer.MAX_VALUE;
         }
@@ -107,7 +104,7 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
         }
 
         // calculate the score
-        score = maze.getScores().get(pacmanIndex);
+        score = maze.getPacmanScores().getOrDefault(pacmanIndex, 0);
         for (int scaredTime : currScaredTimes.values()) {
             score += scaredTime;
         }
@@ -120,6 +117,7 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
         return score;
     }
 
+
     /**
      * Gets the next move based on the algorithm chosen.
      *
@@ -130,8 +128,7 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
      */
     @Override
     public Direction getPacmanAction(int pacmanIndex, int x, int y) {
-        List<Direction> nextDirections = maze.getLegalGhostActions(x, y);
-        nextDirections.remove(Direction.STOP);
+        List<Direction> nextDirections = maze.getLegalActions(x, y);
         Map<Coordinate, Direction> actions = new HashMap<>();
         nextDirections.forEach((d) ->
                 actions.put(new Coordinate(x + d.getDirectionX(), y + d.getDirectionY()), d));
@@ -146,6 +143,7 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
     }
 
     /**
+     * Evaluates the position for a ghost.
      *
      * @param ghostName the name of the ghost
      * @param x         the x coordinate
@@ -153,22 +151,41 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
      * @param isScared  if the ghost is scared
      * @return the evaluation score of the action
      */
-    private int ghostEvaluationFunction(String ghostName, int x, int y,
+    protected int ghostEvaluationFunction(String ghostName, int x, int y,
                                        boolean isScared) {
         int score = 100;
+        if (maze.getPacmanNum() > 0) {
+            IntStream pacmanDists = maze.getPacmanLocation().values().stream()
+                    .mapToInt(pacmanCoordinate
+                            -> AlgorithmsUtility.manhattanDistance(new Coordinate(x, y),
+                            pacmanCoordinate));
 
-        IntStream pacmanDists = maze.getPacmanLocation().values().stream().mapToInt(
-                pelletCoordinate -> AlgorithmsUtility.manhattanDistance(new Coordinate(x, y),
-                        pelletCoordinate));
+            int closestPacmanDist = pacmanDists.min().orElse(-1);
 
-        int closestPacmanDist = pacmanDists.min().orElse(-1);
-
-        if (closestPacmanDist > 0) {
-            if (isScared) {
-                score += closestPacmanDist;
-            } else {
-                score -= closestPacmanDist;
+            if (closestPacmanDist > 0) {
+                if (isScared) {
+                    score += closestPacmanDist;
+                } else {
+                    score -= closestPacmanDist;
+                }
             }
+        } else {
+            // If no pacman on the board, go to the start position
+            IntStream starterDists = Arrays.stream(maze.getGhostsStartLocation())
+                    .mapToInt(startCoordinate
+                            -> AlgorithmsUtility.manhattanDistance(new Coordinate(x, y),
+                            startCoordinate));
+
+            int closestStartDist = starterDists.min().orElse(-1);
+
+            if (closestStartDist > 0) {
+                if (isScared) {
+                    score += closestStartDist;
+                } else {
+                    score -= closestStartDist;
+                }
+            }
+
         }
         return score;
     }
@@ -184,8 +201,7 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
      */
     @Override
     public Direction getGhostAction(String ghostName, int x, int y, boolean isScared) {
-        List<Direction> nextDirections = maze.getLegalGhostActions(x, y);
-        nextDirections.remove(Direction.STOP);
+        List<Direction> nextDirections = maze.getLegalActions(x, y);
         Map<Coordinate, Direction> actions = new HashMap<>();
         nextDirections.forEach((d) ->
                 actions.put(new Coordinate(x + d.getDirectionX(), y + d.getDirectionY()), d));
