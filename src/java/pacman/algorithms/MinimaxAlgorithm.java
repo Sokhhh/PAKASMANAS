@@ -3,7 +3,14 @@ package pacman.algorithms;
 import pacman.model.Direction;
 import pacman.model.Maze;
 
+/**
+ * Defines an algorithm that let the agent applies the minimax algorithm at each
+ * step.
+ *
+ * @version 1.0
+ */
 public class MinimaxAlgorithm extends GreedyAlgorithm {
+    /** Contains the depths of the search. */
     private int depth = 2;
 
     /**
@@ -15,8 +22,11 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
         super(maze);
     }
 
-    private final static boolean MAX = true;
-    private final static boolean MIN = false;
+    /** A constant used in the algorithm. */
+    private static final boolean MAX = true;
+
+    /** A constant used in the algorithm. */
+    private static final boolean MIN = false;
 
     /**
      * The minimax search function.
@@ -124,10 +134,12 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
      * @param pacmanIndex the index of pacman
      * @param x           the x coordinate
      * @param y           the y coordinate
+     * @param current current direction
      * @return the direction to go for next state
      */
     @Override
-    public Direction getPacmanAction(int pacmanIndex, int x, int y) {
+    public Direction getPacmanAction(int pacmanIndex, int x, int y,
+                                     Direction current) {
         Direction ret = Direction.STOP;
         double score = 0;
         for (Direction d: maze.getLegalActions(x, y)) {
@@ -145,11 +157,13 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
      * @param ghostName the name of the ghost
      * @param x         the x coordinate
      * @param y         the y coordinate
+     * @param current current direction
      * @param isScared  if the ghost is scared
      * @return the direction to go for next state
      */
     @Override
-    public Direction getGhostAction(String ghostName, int x, int y, boolean isScared) {
+    public Direction getGhostAction(String ghostName, int x, int y,
+                                          Direction current, boolean isScared) {
         Direction ret = Direction.STOP;
         double score = 0;
         for (Direction d: maze.getLegalActions(x, y)) {

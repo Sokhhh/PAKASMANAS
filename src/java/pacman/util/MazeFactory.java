@@ -156,7 +156,7 @@ public class MazeFactory {
         /**
          * Gets the name of the mazes.
          */
-        public static final Map<String, String> ITEMS = MapBuilder.build(
+        public static final Map<String, String> ITEMS = MapBuilder.map(
                 entry(PELLET_CLASSIC_NAME, PELLET_CLASSIC),
                 entry(SMALL_CLASSIC_NAME, SMALL_CLASSIC),
                 entry(CONTEST_CLASSIC_NAME, CONTEST_CLASSIC),
@@ -251,7 +251,7 @@ public class MazeFactory {
                         row.add(Maze.WALL);
                         break;
                     default:
-                        Logger.printf("Illegal character %c at (%d, %d)\n",
+                        Logger.printlnf("Illegal character %c at (%d, %d)",
                             line.charAt(x), x, data.size());
                 }
             }

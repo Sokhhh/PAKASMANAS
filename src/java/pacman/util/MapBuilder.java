@@ -1,8 +1,8 @@
 package pacman.util;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * This is a simple factory class to initialize a map in one line, since Java 8
@@ -17,7 +17,7 @@ public class MapBuilder {
     /**
      * Creates an immutable Map.Entry containing the given key and value. These
      * entries are suitable for populating Map instances using the
-     * {@link MapBuilder#build(Map.Entry[])} method.
+     * {@link MapBuilder#map(Map.Entry[])} method.
      *
      * @param k the key
      * @param v the value
@@ -43,13 +43,27 @@ public class MapBuilder {
      * @return a {@code Map} containing the specified mappings
      */
     @SafeVarargs
-    public static <K, V> Map<K, V> build(Map.Entry<K, V>... entries) {
-        Map<K, V> result = new HashMap<>();
+    public static <K, V> Map<K, V> map(Map.Entry<K, V>... entries) {
+        Map<K, V> result = new LinkedHashMap<>();
 
         for (Map.Entry<K, V> entry : entries) {
             result.put(entry.getKey(), entry.getValue());
         }
 
         return result;
+    }
+
+    /**
+     * Creates a mutable Set pre-initialized elements. Note that while in JDK 8 this
+     * does return a {@code HashSet}, the specification doesn't guarantee it, and
+     * this might change in the future.
+     *
+     * @param <K> the Set's element type
+     * @param elements the elements to be contained in the set
+     * @return a {@code Set} containing the specified elements
+     */
+    @SafeVarargs
+    public static <K> Set<K> set(K... elements) {
+        return Stream.of(elements).collect(Collectors.toSet());
     }
 }

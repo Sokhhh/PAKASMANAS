@@ -1,12 +1,22 @@
 package pacman.algorithms;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.IntStream;
 import pacman.model.Coordinate;
 import pacman.model.Direction;
 import pacman.model.Maze;
 
-import java.util.*;
-import java.util.stream.IntStream;
 
+/**
+ * Defines an algorithm that let the agent applies the greedy algorithm at each step.
+ *
+ * @version 1.0
+ */
 public class GreedyAlgorithm extends AbstractAlgorithm {
     /**
      * Creates a search algorithm utility.
@@ -75,11 +85,14 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
         int closestGhostScaredDist = 0;
         if (currGhostStates.size() > 0) {
             closestGhostDist = Integer.MAX_VALUE;
-            for (Coordinate ghostCoordinate : currGhostStates.values()) {
-                int currGhostDist = AlgorithmsUtility.manhattanDistance(
-                        new Coordinate(x, y), ghostCoordinate);
-                if (currGhostDist < closestGhostDist) {
-                    closestGhostDist = currGhostDist;
+            for (String ghostName : currGhostStates.keySet()) {
+                if (currScaredTimes.get(ghostName) <= 0) {
+                    Coordinate ghostCoordinate = currGhostStates.get(ghostName);
+                    int currGhostDist = AlgorithmsUtility.manhattanDistance(
+                            new Coordinate(x, y), ghostCoordinate);
+                    if (currGhostDist < closestGhostDist) {
+                        closestGhostDist = currGhostDist;
+                    }
                 }
             }
 
@@ -124,10 +137,12 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
      * @param pacmanIndex the index of pacman
      * @param x           the x coordinate
      * @param y           the y coordinate
+     * @param current current direction
      * @return the direction to go for next state
      */
     @Override
-    public Direction getPacmanAction(int pacmanIndex, int x, int y) {
+    public Direction getPacmanAction(int pacmanIndex, int x, int y,
+                                     Direction current) {
         List<Direction> nextDirections = maze.getLegalActions(x, y);
         Map<Coordinate, Direction> actions = new HashMap<>();
         nextDirections.forEach((d) ->
@@ -151,8 +166,7 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
      * @param isScared  if the ghost is scared
      * @return the evaluation score of the action
      */
-    protected int ghostEvaluationFunction(String ghostName, int x, int y,
-                                       boolean isScared) {
+    protected int ghostEvaluationFunction(String ghostName, int x, int y, boolean isScared) {
         int score = 100;
         if (maze.getPacmanNum() > 0) {
             IntStream pacmanDists = maze.getPacmanLocation().values().stream()
@@ -196,11 +210,13 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
      * @param ghostName the name of the ghost
      * @param x         the x coordinate
      * @param y         the y coordinate
+     * @param current current direction
      * @param isScared  if the ghost is scared
      * @return the direction to go for next state
      */
     @Override
-    public Direction getGhostAction(String ghostName, int x, int y, boolean isScared) {
+    public Direction getGhostAction(String ghostName, int x, int y,
+                                    Direction current, boolean isScared) {
         List<Direction> nextDirections = maze.getLegalActions(x, y);
         Map<Coordinate, Direction> actions = new HashMap<>();
         nextDirections.forEach((d) ->

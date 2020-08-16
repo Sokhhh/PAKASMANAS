@@ -1,28 +1,29 @@
 package pacman.controller;
 
+import golgui.components.GuiMessenger;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
-
-import golgui.components.GuiMessenger;
 import pacman.agents.AbstractAgent;
 import pacman.agents.GhostAgent;
 import pacman.agents.PacmanAgent;
+import pacman.algorithms.AlgorithmFactory;
 import pacman.algorithms.GreedyAlgorithm;
 import pacman.model.Coordinate;
 import pacman.model.Maze;
 import pacman.network.SimpleP2PServer;
 import pacman.util.Logger;
 import pacman.util.MazeFactory;
+import pacman.viewer.AgentItemPanel;
 import pacman.viewer.GUIViewer;
 
 
@@ -61,6 +62,9 @@ public class PacmanController implements PacmanMazeController, NetworkController
 
     /** Contains the maze of the game. */
     private Maze maze;
+
+    /** Contains a flag if the start of game is with additional parameters. */
+    private boolean isAdvancedStart = false;
 
     /**
      * Creates a new instance of PacmanController.
@@ -129,6 +133,26 @@ public class PacmanController implements PacmanMazeController, NetworkController
         }
         return false;
     }
+
+
+    /**
+     * Loads the maze from the file.
+     *
+     * @param preConfiguredMazeName name of a preconfigured maze; {@code null} if
+     *                              user chooses a custom maze
+     * @param filename name of an input file of a maze; {@code null} if user
+     *                 does not choose a custom maze
+     * @return if the maze is loaded successfully
+     */
+    public boolean advancedLoad(final String preConfiguredMazeName,
+                                final String filename) {
+        boolean ret = this.load(preConfiguredMazeName, filename);
+        if (ret) {
+            view.setUpPlayerListPanel(maze);
+        }
+        return ret;
+    }
+
     // ==================================================================================
     //                              NETWORK
     // ==================================================================================
@@ -323,6 +347,16 @@ public class PacmanController implements PacmanMazeController, NetworkController
         }
     }
 
+    /**
+     * This method gets the list of connected clients.
+     *
+     * @return a set containing the addresses of all connected clients
+     */
+    @Override
+    public Set<SocketAddress> getClientList() {
+        return server.getClientList();
+    }
+
     // ==================================================================================
     //                                     GAME CONTROL
     // ==================================================================================
@@ -338,7 +372,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
      * Starts the game.
      */
     public void start() {
-        view.askForInput();
+        isAdvancedStart = false;
         String mazeName = settings.get("Maze", null);
         String filename = settings.get("InputFile", null);
         if (this.load(mazeName, filename)) {
@@ -350,15 +384,73 @@ public class PacmanController implements PacmanMazeController, NetworkController
     }
 
     /**
+     * Starts the game with advanced options.
+     * @param selectedName name of the user selected agent
+     * @param agentItemPanels Contains a list of all choices of agents
+     *                                 available in the maze
+     */
+    public void advancedStart(String selectedName, List<AgentItemPanel> agentItemPanels) {
+        if (maze == null) {
+            view.notification("You haven't set the map");
+            return;
+        }
+        if (selectedName == null) {
+            view.notification("You haven't select an agent to control");
+            return;
+        }
+        view.askForInput(1);
+        isAdvancedStart = true;
+        // Start the game
+        String mazeName = settings.get("Maze", null);
+        view.setTitle(mazeName);
+        view.start(maze);
+
+        // Add ghosts and pacman
+        AlgorithmFactory algorithmFactory = new AlgorithmFactory(maze);
+
+        List<Coordinate> pacman = Arrays.asList(maze.getPacmanStartLocation());
+        List<Coordinate> ghosts = Arrays.asList(maze.getGhostsStartLocation());
+        // Use Fisher-Yates shuffle algorithm to get a random order list
+        Collections.shuffle(pacman, ThreadLocalRandom.current());
+        Collections.shuffle(ghosts, ThreadLocalRandom.current());
+        int pacmanNum = 0;
+        int ghostNum = 0;
+        for (AgentItemPanel selectionItem : agentItemPanels) {
+            boolean isSelf = selectedName.equals(selectionItem.getAgentName());
+            if (Arrays.asList(PacmanAgent.NAMES).contains(selectionItem.getAgentName())) {
+                this.maze.pacmanVisit(pacmanNum, pacman.get(pacmanNum).getX(),
+                        pacman.get(pacmanNum).getY());
+                this.view.addPacman(maze, pacman.get(pacmanNum).getX(), pacman.get(pacmanNum).getY(), pacmanNum,
+                        algorithmFactory.createAlgorithm(selectionItem.getAlgorithmName()),
+                        isSelf);
+                pacmanNum++;
+            } else {
+                this.maze.ghostVisit(GhostAgent.NAMES[ghostNum], ghosts.get(ghostNum).getX(),
+                        ghosts.get(ghostNum).getY());
+                this.view.addGhost(maze, ghosts.get(ghostNum).getX(), ghosts.get(ghostNum).getY(),
+                        GhostAgent.NAMES[ghostNum],
+                        algorithmFactory.createAlgorithm(selectionItem.getAlgorithmName()), isSelf);
+                ghostNum++;
+            }
+        }
+    }
+
+    /**
      * Starts the game with advanced configurations.
      */
-    public void advancedStart() {
-        view.askForInput();
+    public void showAdvancedStart() {
+        view.askForInput(0);
         String mazeName = settings.get("Maze", null);
         String filename = settings.get("InputFile", null);
+        try {
+            server.startListening(settings.getInt("Port", 0));
+        } catch (IOException | SecurityException e) {
+            this.view.notification("Cannot ");
+        }
         load(mazeName, filename);
-        view.setUpAdvancedStart(maze);
+        view.showAdvancedPanel();
     }
+
 
     /**
      * Goes back to the main menu and stops the game.
@@ -372,7 +464,11 @@ public class PacmanController implements PacmanMazeController, NetworkController
      * Restarts the game with same configuration after gameplay ends.
      */
     private void restartGame() {
-        this.start();
+        if (isAdvancedStart) {
+            this.advancedStart(view.getSelectedName(), view.getAgentItemPanels());
+        } else {
+            this.start();
+        }
         this.lives = new AtomicInteger(totalLives);
     }
 
@@ -380,7 +476,6 @@ public class PacmanController implements PacmanMazeController, NetworkController
      * Exits the game.
      */
     public void exit() {
-        view.askForInput();
         settings.putInt("TotalLives", totalLives);
 
         try (FileOutputStream out = new FileOutputStream("prefs.xml")) {
@@ -417,12 +512,11 @@ public class PacmanController implements PacmanMazeController, NetworkController
         List<Coordinate> ghosts = Arrays.asList(maze.getGhostsStartLocation());
         // Use Fisher-Yates shuffle algorithm to get a random order list
         Collections.shuffle(ghosts, ThreadLocalRandom.current());
-        String[] ghostNames = new String[] {"pink", "red", "yellow", "blue", "green"};
-        for (int i=0; i < Math.min(ghosts.size(), ghostNames.length); i++) {
-            this.maze.ghostVisit(ghostNames[i], ghosts.get(i).getX(),
+        for (int i = 0; i < Math.min(ghosts.size(), GhostAgent.NAMES.length); i++) {
+            this.maze.ghostVisit(GhostAgent.NAMES[i], ghosts.get(i).getX(),
                 ghosts.get(i).getY());
             this.view.addGhost(maze, ghosts.get(i).getX(), ghosts.get(i).getY(),
-                ghostNames[i], new GreedyAlgorithm(maze), false);
+                GhostAgent.NAMES[i], new GreedyAlgorithm(maze), false);
         }
     }
 
@@ -448,14 +542,14 @@ public class PacmanController implements PacmanMazeController, NetworkController
         if (agent instanceof PacmanAgent) {
             // If pellets is hit, scare the ghosts and turn pacman into ghost buster
             if (maze.get(x, y) == Maze.PELLETS) {
-                Logger.printf("Ghost buster!\n");
+                Logger.printlnf("Ghost buster!");
                 this.hitPellets();
             }
             // Update location and scores
             scoresDiff += maze.pacmanVisit(((PacmanAgent) agent).getIndex(),
                     x, y);
             // Check if the curr location is the same as any ghost
-            for (String ghostName: new HashSet<>(maze.getVisibleGhostNames())) {
+            for (String ghostName: maze.getVisibleGhostNames()) {
                 if (maze.getGhostsLocation().get(ghostName).equals(new Coordinate(x,
                         y))) {
                     if (maze.getGhostScaredTimes().get(ghostName) > 0) {
@@ -496,7 +590,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
      * @param win if the user wins
      */
     public void gameOver(boolean win) {
-        Logger.printf("Game over");
+        Logger.printlnf("Game over");
         this.view.gameOver(win);
         int choice = this.view.showResultDialog(win);
         // Show panel of lose/win
@@ -534,7 +628,8 @@ public class PacmanController implements PacmanMazeController, NetworkController
             lives.decrementAndGet();
             this.view.resetAgent(pacmanIndex);
             this.view.updateLives(lives.get());
-            this.view.notification("Pacman died! You have " + lives.get() + " lives left");
+            this.view.notification("Pacman died! It has " + lives.get() + " "
+                    + "lives left");
         } else {
             this.gameOver(false);
         }
@@ -562,4 +657,5 @@ public class PacmanController implements PacmanMazeController, NetworkController
             maze.removeGhost(((GhostAgent) agent).getAgentName());
         }
     }
+
 }

@@ -289,12 +289,42 @@ public class Maze {
         return new HashMap<>(ghostScaredTimes);
     }
 
-    public Collection<String> getGhostNames() {
-        return ghostScaredTimes.keySet();
+    /**
+     * This function will get the number of all ghosts in the maze.
+     *
+     * @return the number of all ghosts in the maze
+     */
+    public int getGhostNum() {
+        return ghostScaredTimes.size();
     }
 
-    public Collection<String> getVisibleGhostNames() {
-        return ghostLocations.keySet();
+
+    /**
+     * This function will get the name of all ghosts in the maze.
+     *
+     * @return the name of all ghosts in the maze
+     */
+    public Set<String> getGhostNames() {
+        return new HashSet<>(ghostScaredTimes.keySet());
+    }
+
+    /**
+     * This function will get the name of all visible ghosts in the maze.
+     *
+     * @return the name of all ghosts in the maze
+     */
+    public Set<String> getVisibleGhostNames() {
+        return new HashSet<>(ghostLocations.keySet());
+    }
+
+    /**
+     *
+     * This function will get the coordinates of all walls in the maze.
+     *
+     * @return the coordinates of all walls in the maze.
+     */
+    public Set<Coordinate> getWalls() {
+        return new HashSet<>(this.walls);
     }
 
     /**
@@ -501,7 +531,7 @@ public class Maze {
      */
     public int pacmanVisit(final int index, final int x, final int y) {
         if (!this.isValidBlock(x, y)) {
-            Logger.printf("Pacman shouldn't be at %s, check what happened?",  new Coordinate(x, y));
+            Logger.printlnf("Pacman shouldn't be at %s, check what happened?",  new Coordinate(x, y));
             return 0;
         }
         if (!this.pacmanScores.containsKey(index)) {

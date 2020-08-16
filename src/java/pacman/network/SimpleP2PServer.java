@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import pacman.controller.NetworkController;
@@ -80,6 +81,9 @@ public class SimpleP2PServer {
      * @return the local port of the host
      */
     public int getLocalPort() {
+        if (serverSocket == null) {
+            return 0;
+        }
         return this.serverSocket.getLocalPort();
     }
 
@@ -120,6 +124,9 @@ public class SimpleP2PServer {
                     new InputStreamReader(is, StandardCharsets.UTF_8));
             String line;
             while ((line = br.readLine()) != null) {
+                if (line.startsWith("Active code page")) {
+                    continue;
+                }
                 sb.append(line).append(System.lineSeparator());
             }
             p.waitFor(); // Let the process finish.
@@ -215,7 +222,7 @@ public class SimpleP2PServer {
                 continue;
             }
             // client accepted
-            Logger.printf("Receive connection on %s\n",
+            Logger.printlnf("Receive connection on %s",
                     newConnectionSocket.getRemoteSocketAddress());
             this.controller.incomingConnection(newConnectionSocket.getRemoteSocketAddress(),
                     newConnectionSocket.getPort());
@@ -232,6 +239,15 @@ public class SimpleP2PServer {
      */
     public void confirmConnection(SocketAddress remoteSocketAddress) throws IOException {
         this.send(remoteSocketAddress, Tags.CONFIRM_TAG);
+    }
+
+    /**
+     * This method gets the list of connected clients.
+     *
+     * @return a set containing the addresses of all connected clients
+     */
+    public Set<SocketAddress> getClientList() {
+        return new HashSet<>(connectionSockets.keySet());
     }
 
     // ==================================================================================
@@ -339,7 +355,7 @@ public class SimpleP2PServer {
         while (!line.equals("CLOSE")) {
             try {
                 line = in.readUTF();
-                Logger.printf("%s -> %s: %s\n", client.getRemoteSocketAddress(),
+                Logger.printlnf("%s -> %s: %s", client.getRemoteSocketAddress(),
                         getLocalIP(), line);
                 this.controller.receiveRemoteMessage(line);
             } catch (IOException i) {

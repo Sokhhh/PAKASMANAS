@@ -574,15 +574,16 @@ public class GuiComponentFactory {
      * This function will create a flat design JComboBox: transparent background,
      * dark popup menu and white text.
      *
+     * @param <K> the type of the combo box item
      * @param hoverColor Color for background when the user moves the cursor over it
      * @param backgroundColor Color for background
      * @param textColor Color for text
      * @return a new JComboBox
      */
-    public static JComboBox<String> createComboBox(Color hoverColor,
+    public static <K> JComboBox<K> createComboBox(Color hoverColor,
         Color backgroundColor,
         Color textColor) {
-        JComboBox<String> choiceBox = new JComboBox<>();
+        JComboBox<K> choiceBox = new JComboBox<>();
         choiceBox.setUI(new BasicComboBoxUI() {
             /**
              * Creates a button which will be used as the control to show or hide

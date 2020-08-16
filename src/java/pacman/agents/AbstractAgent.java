@@ -1,6 +1,6 @@
 package pacman.agents;
 
-import java.awt.*;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.LinkedList;
@@ -10,6 +10,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import pacman.algorithms.AbstractAlgorithm;
 import pacman.controller.PacmanMazeController;
 import pacman.model.Coordinate;
 import pacman.model.Direction;
@@ -18,6 +19,8 @@ import pacman.model.Maze;
 /**
  * This is a component that shows a character (ghost/pacman) in the game with moving
  * animations.
+ *
+ * @version 1.0
  */
 public abstract class AbstractAgent extends JLabel {
     /** Contains the controller of the application. */
@@ -84,7 +87,10 @@ public abstract class AbstractAgent extends JLabel {
     protected final LinkedList<Direction> pendingDirections =
         new LinkedList<>();
 
-
+    /**
+     * Contains the algorithm chosen for determining next move.
+     */
+    protected final AbstractAlgorithm algorithm;
 
     /**
      * Contains an Action object that applied when the user inputs a new direction. It
@@ -135,9 +141,11 @@ public abstract class AbstractAgent extends JLabel {
      * @param startCoordinateX the start x coordinate of the icon in the board
      * @param startCoordinateY the start y coordinate of the icon in the board
      * @param delay the milliseconds of delay between each step of movement animation
+     * @param algorithm  the algorithm chosen for determining next move
      */
     public AbstractAgent(final PacmanMazeController controller, final Maze maze,
-                         int startCoordinateX, int startCoordinateY, int delay) {
+                         int startCoordinateX, int startCoordinateY, int delay,
+                         AbstractAlgorithm algorithm) {
         this.controller = controller;
         this.deltaX = blockSize / 5;
         this.deltaY = blockSize / 5;
@@ -148,6 +156,7 @@ public abstract class AbstractAgent extends JLabel {
         this.coordinateX = startCoordinateX;
         this.coordinateY = startCoordinateY;
         this.direction = Direction.STOP;
+        this.algorithm = algorithm;
 
         // Changes the image icon of the component
         setSize(new Dimension(blockSize, blockSize));

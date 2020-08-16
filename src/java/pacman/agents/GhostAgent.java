@@ -4,6 +4,7 @@ import static pacman.agents.MazePanel.BLOCK_SIZE;
 
 import java.awt.Dimension;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.ImageIcon;
@@ -13,16 +14,23 @@ import pacman.model.Direction;
 import pacman.model.Maze;
 import pacman.util.ImageInterning;
 
+
+/**
+ * This is a component that shows a ghost in the game with moving animations.
+ *
+ * @version 1.0
+ */
 public class GhostAgent extends AbstractAgent {
+    /**
+     * Available names of ghost.
+     */
+    public static final String[] NAMES = {"pink", "red", "yellow", "blue",
+        "green", "black"};
+
     /**
      * Name of the ghost.
      */
     private final String name;
-
-    /**
-     * Contains the algorithm chosen for determining next move.
-     */
-    private final AbstractAlgorithm algorithm;
 
     /**
      * Contains the icon of a scared ghost.
@@ -52,7 +60,11 @@ public class GhostAgent extends AbstractAgent {
     public GhostAgent(final PacmanMazeController controller, final Maze maze,
                       final int startCoordinateX, final int startCoordinateY,
                       final String name, AbstractAlgorithm algorithm) {
-        super(controller, maze, startCoordinateX, startCoordinateY, 50);
+        super(controller, maze, startCoordinateX, startCoordinateY, 50, algorithm);
+        if (!Arrays.asList(NAMES).contains(name)) {
+            throw new RuntimeException("Ghost name \"" + name + "\" does not have its "
+                    + "image.");
+        }
         try {
             rightIcon = ImageInterning.getImageIconFromFile("ghost_" + name + "_right.gif",
                     new Dimension(BLOCK_SIZE, BLOCK_SIZE));
@@ -70,7 +82,6 @@ public class GhostAgent extends AbstractAgent {
         }
         setIcon(rightIcon);
         this.name = name;
-        this.algorithm = algorithm;
     }
 
     /**
@@ -92,7 +103,7 @@ public class GhostAgent extends AbstractAgent {
     @Override
     protected void checkPossibleNextDirection(final Direction currDirection) {
         changeDirection(this.algorithm.getGhostAction(name, coordinateX,
-                coordinateY, isScared));
+                coordinateY, currDirection, isScared));
     }
 
     /**

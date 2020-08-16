@@ -1,6 +1,9 @@
 package pacman.controller;
 
+import java.net.InetAddress;
 import java.net.SocketAddress;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * This interface defines basic actions that a controller with networking should
@@ -65,4 +68,10 @@ public interface NetworkController {
      */
     void receiveRemoteMessage(String message);
 
+    /**
+     * This method gets the list of connected clients.
+     *
+     * @return a set containing the addresses of all connected clients
+     */
+    Set<SocketAddress> getClientList();
 }

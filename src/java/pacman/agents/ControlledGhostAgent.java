@@ -8,12 +8,12 @@ import pacman.model.Maze;
 
 
 /**
- * This is a component that shows a user controlled pacman in the game with
+ * This is a component that shows a user controlled ghost in the game with
  * moving animations.
  *
  * @version 1.0
  */
-public class ControlledPacmanAgent extends PacmanAgent implements KeyboardControlledAgent {
+public class ControlledGhostAgent extends GhostAgent implements KeyboardControlledAgent {
     private boolean aiTakeOver = false;
 
     /**
@@ -23,14 +23,13 @@ public class ControlledPacmanAgent extends PacmanAgent implements KeyboardContro
      * @param maze            the game maze
      * @param startCoordinateX the start x coordinate of the icon in the board
      * @param startCoordinateY the start y coordinate of the icon in the board
-     * @param index the index of the pacman
+     * @param name             name of the ghost
      * @param algorithm  the algorithm chosen for determining next move
      */
-    public ControlledPacmanAgent(final PacmanMazeController controller, final Maze maze,
-                                 final int startCoordinateX,
-                                 final int startCoordinateY, final int index,
-                                 AbstractAlgorithm algorithm) {
-        super(controller, maze, startCoordinateX, startCoordinateY, index, algorithm);
+    public ControlledGhostAgent(final PacmanMazeController controller, final Maze maze,
+                                 final int startCoordinateX, final int startCoordinateY,
+                                 final String name, AbstractAlgorithm algorithm) {
+        super(controller, maze, startCoordinateX, startCoordinateY, name, algorithm);
         this.setArrowKeyToControl(this);
     }
 
@@ -83,3 +82,4 @@ public class ControlledPacmanAgent extends PacmanAgent implements KeyboardContro
         return aiTakeOver;
     }
 }
+

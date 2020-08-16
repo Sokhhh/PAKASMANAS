@@ -1,4 +1,6 @@
-package pacman.util;
+package pacman.viewer;
+
+import pacman.util.PacmanTheme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -113,7 +115,7 @@ public class PacmanViewFactory {
     }
 
     public static String makeHTML(String str) {
-        return "<html>" + str
+        return "<html>" + str.replaceAll(System.lineSeparator(), "<br>").replaceAll("\n", "<br>")
                 + "</html>";
     }
 }

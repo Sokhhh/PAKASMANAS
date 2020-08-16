@@ -1,22 +1,29 @@
 package pacman.agents;
 
+import static pacman.agents.MazePanel.BLOCK_SIZE;
+
+import java.awt.Dimension;
+import java.io.IOException;
 import pacman.algorithms.AbstractAlgorithm;
 import pacman.controller.PacmanMazeController;
 import pacman.model.Direction;
 import pacman.model.Maze;
 import pacman.util.ImageInterning;
 
-import java.awt.*;
-import java.io.IOException;
-
-import static pacman.agents.MazePanel.BLOCK_SIZE;
-
+/**
+ * This is a component that shows a pacman in the game with moving animations.
+ *
+ * @version 1.0
+ */
 public class PacmanAgent extends AbstractAgent {
+    /**
+     * Available names of ghost.
+     */
+    public static final String[] NAMES = {"pacman"};
 
-    /** the algorithm chosen for determining next move. **/
-    private final AbstractAlgorithm algorithm;
-
+    /** Contains the index of the pacman in the maze. */
     protected final int index;
+
 
     /**
      * Constructor that creates a new PacmanAgent.
@@ -31,7 +38,7 @@ public class PacmanAgent extends AbstractAgent {
     public PacmanAgent(final PacmanMazeController controller, final Maze maze,
                        final int startCoordinateX, final int startCoordinateY,
                        final int index, final AbstractAlgorithm algorithm) {
-        super(controller, maze, startCoordinateX, startCoordinateY, 30);
+        super(controller, maze, startCoordinateX, startCoordinateY, 30, algorithm);
         try {
             rightIcon = ImageInterning.getImageIconFromFile("pacman_right.gif",
                     new Dimension(BLOCK_SIZE, BLOCK_SIZE));
@@ -46,7 +53,6 @@ public class PacmanAgent extends AbstractAgent {
         }
         setIcon(rightIcon);
         this.index = index;
-        this.algorithm = algorithm;
     }
 
     /**
@@ -57,7 +63,7 @@ public class PacmanAgent extends AbstractAgent {
     @Override
     protected void checkPossibleNextDirection(final Direction currDirection) {
         changeDirection(this.algorithm.getPacmanAction(index, coordinateX,
-                coordinateY));
+                coordinateY, currDirection));
     }
 
     public int getIndex() {
