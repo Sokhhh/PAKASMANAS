@@ -1,7 +1,19 @@
 package pacman.network;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,7 +31,9 @@ import pacman.util.Logger;
  * @version 1.0
  */
 public class SimpleP2PServer {
-    /** Contains the controller of this application. */
+    /**
+     * Contains the controller of this application.
+     */
     private final NetworkController controller;
 
     /**
@@ -42,7 +56,9 @@ public class SimpleP2PServer {
      * Contains the tags for network messages.
      */
     public static final class Tags {
-        /** Network protocol tag, see {@link #listen()}. */
+        /**
+         *  Network protocol tag, see {@link #listen()}.
+         */
         public static final String CONFIRM_TAG = "[CONFIRM]";
     }
 

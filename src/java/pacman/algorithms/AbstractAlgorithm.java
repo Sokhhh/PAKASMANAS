@@ -2,9 +2,6 @@ package pacman.algorithms;
 
 import pacman.model.Direction;
 import pacman.model.Maze;
-import pacman.util.MapBuilder;
-
-import java.util.Set;
 
 /**
  * Contains the algorithm of pacman and ghost in the maze. The search is mainly

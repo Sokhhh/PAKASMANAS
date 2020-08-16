@@ -10,7 +10,7 @@ import pacman.model.Maze;
  *
  * @version 1.0
  */
-public class DfsAlgorithm extends AbstractAlgorithm{
+public class DfsAlgorithm extends AbstractAlgorithm {
     /**
      * Creates a search algorithm utility.
      *
@@ -46,6 +46,7 @@ public class DfsAlgorithm extends AbstractAlgorithm{
             return nextDirections.get(0);
         }
     }
+
     /**
      * Gets the next move based on the algorithm chosen.
      *

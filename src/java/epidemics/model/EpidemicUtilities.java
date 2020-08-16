@@ -56,35 +56,4 @@ public class EpidemicUtilities {
         return list.get(0);
     }
 
-    /**
-     * Checks if a string is an integer.
-     *
-     * @param str the string being queried
-     * @return {@code true} if the string is an integer
-     */
-    public static boolean isInteger(String str) {
-        if (str == null || str.isEmpty()) {
-            return false;
-        }
-        if (str.chars().allMatch(Character::isDigit)) {
-            return true;
-        } else {
-            if (str.charAt(0) == '-') {
-                return isInteger(str.substring(1));
-            } else {
-                return false;
-            }
-        }
-    }
-
-    /**
-     * Checks if a string is a double.
-     *
-     * @param str the string being queried
-     * @return {@code true} if the string is a double
-     */
-    public static boolean isDouble(String str) {
-        // match a number with optional '-' and decimal.
-        return str.matches("-?\\d+(\\.\\d+)?");
-    }
 }

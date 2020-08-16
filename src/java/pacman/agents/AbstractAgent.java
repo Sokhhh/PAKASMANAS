@@ -218,6 +218,9 @@ public abstract class AbstractAgent extends JLabel {
         setVisible(false);
         java.util.Timer hold = new java.util.Timer();
         hold.scheduleAtFixedRate(new TimerTask() {
+            /**
+             * The action to be performed by this timer task.
+             */
             public void run() {
                 new Thread(() -> {
                     Coordinate curr = new Coordinate(startCoordinateX, startCoordinateY);

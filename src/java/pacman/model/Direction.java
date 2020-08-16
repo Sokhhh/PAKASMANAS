@@ -1,7 +1,9 @@
 package pacman.model;
 
 /**
- * Represents the direction of placing a ship.
+ * Represents a direction of moving in the maze.
+ *
+ * @version 1.0
  */
 public enum Direction {
     /** Direction up. */
@@ -55,6 +57,11 @@ public enum Direction {
         }
     }
 
+    /**
+     * Gets the reverse of the current direction.
+     *
+     * @return the reverse of the current
+     */
     public Direction reverse() {
         switch (this) {
             case UP:
@@ -70,6 +77,12 @@ public enum Direction {
         }
     }
 
+    /**
+     * Gets the difference in x coordinate if an action is taken in current
+     * direction.
+     *
+     * @return the difference in x coordinate if an action
+     */
     public int getDirectionX() {
         switch (this) {
             case LEFT:
@@ -82,6 +95,12 @@ public enum Direction {
 
     }
 
+    /**
+     * Gets the difference in y coordinate if an action is taken in current
+     * direction.
+     *
+     * @return the difference in y coordinate if an action
+     */
     public int getDirectionY() {
         switch (this) {
             case UP:
@@ -93,7 +112,14 @@ public enum Direction {
         }
     }
 
-    public boolean isRotate(Direction newDirection) {
+    /**
+     * Checks if the direction is perpendicular to the current direction.
+     *
+     * @param newDirection the direction to be checked
+     * @return {@code true} if the direction is perpendicular to the current
+     *      direction and {@code false} otherwise
+     */
+    public boolean isPerpendicular(Direction newDirection) {
         switch (this) {
             case UP:
             case DOWN:
@@ -104,6 +130,5 @@ public enum Direction {
             default:
                 return false;
         }
-
     }
 }

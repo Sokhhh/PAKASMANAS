@@ -1,19 +1,18 @@
 package golgui.utils;
 
 import golgui.components.GuiComponentFactory;
-
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * This is an object that the application uses to handle the interaction with local
  * files.
  *
-
  * @version <b>1.0</b>
  */
 public class LocalFileOperator {

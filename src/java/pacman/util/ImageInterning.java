@@ -8,6 +8,11 @@ import java.util.HashMap;
 import javax.swing.ImageIcon;
 import pacman.agents.AbstractAgent;
 
+/**
+ * Applying the interning design pattern to create image objects in the application.
+ *
+ * @version 1.0
+ */
 public class ImageInterning {
 
     /** Contains images with their names. */
@@ -58,7 +63,8 @@ public class ImageInterning {
      * @return a new ImageIcon object
      * @throws IOException if the file is not found
      */
-    public static ImageIcon getImageIconFromFile(String filename, Dimension size) throws IOException {
+    public static ImageIcon getImageIconFromFile(String filename, Dimension size)
+        throws IOException {
         Image image = getImageInstance(filename);
         if (size != null) {
             return getResizedImageIcon(image, size);

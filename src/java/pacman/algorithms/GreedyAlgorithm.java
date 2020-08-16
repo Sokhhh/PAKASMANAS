@@ -48,11 +48,10 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
      * @return the evaluation score of the action
      */
     protected double pacmanEvaluationFunction(int pacmanIndex, int x, int y) {
-        Set<Coordinate> currFood = maze.getFoods();
-        Coordinate[] pellets = maze.getPellets();
-        Map<String, Coordinate> currGhostStates = maze.getGhostsLocation();
-        Map<String, Integer> currScaredTimes = maze.getGhostScaredTimes();
-        int score = 0;
+        final Set<Coordinate> currFood = maze.getFoods();
+        final Coordinate[] pellets = maze.getPellets();
+        final Map<String, Coordinate> currGhostStates = maze.getGhostsLocation();
+        final Map<String, Integer> currScaredTimes = maze.getGhostScaredTimes();
         // check if the current state is the final winning state
         if (maze.isLose(x, y)) {
             // Lose
@@ -117,7 +116,7 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
         }
 
         // calculate the score
-        score = maze.getPacmanScores().getOrDefault(pacmanIndex, 0);
+        int score = maze.getPacmanScores().getOrDefault(pacmanIndex, 0);
         for (int scaredTime : currScaredTimes.values()) {
             score += scaredTime;
         }
@@ -171,8 +170,8 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
         if (maze.getPacmanNum() > 0) {
             IntStream pacmanDists = maze.getPacmanLocation().values().stream()
                     .mapToInt(pacmanCoordinate
-                            -> AlgorithmsUtility.manhattanDistance(new Coordinate(x, y),
-                            pacmanCoordinate));
+                        -> AlgorithmsUtility.manhattanDistance(new Coordinate(x, y),
+                        pacmanCoordinate));
 
             int closestPacmanDist = pacmanDists.min().orElse(-1);
 
@@ -187,8 +186,8 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
             // If no pacman on the board, go to the start position
             IntStream starterDists = Arrays.stream(maze.getGhostsStartLocation())
                     .mapToInt(startCoordinate
-                            -> AlgorithmsUtility.manhattanDistance(new Coordinate(x, y),
-                            startCoordinate));
+                        -> AlgorithmsUtility.manhattanDistance(new Coordinate(x, y),
+                        startCoordinate));
 
             int closestStartDist = starterDists.min().orElse(-1);
 
@@ -223,7 +222,8 @@ public class GreedyAlgorithm extends AbstractAlgorithm {
                 actions.put(new Coordinate(x + d.getDirectionX(), y + d.getDirectionY()), d));
         Coordinate bestAction = actions.keySet().stream().max(
                 Comparator.comparing(i ->
-                        ghostEvaluationFunction(ghostName, i.getX(), i.getY(), isScared))).orElse(null);
+                    ghostEvaluationFunction(ghostName, i.getX(), i.getY(), isScared)))
+                    .orElse(null);
         if (bestAction != null) {
             return actions.get(bestAction);
         } else {

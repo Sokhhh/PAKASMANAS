@@ -116,8 +116,8 @@ public class PacmanController implements PacmanMazeController, NetworkController
         }
         try {
             if (!preConfiguredMazeName.equals(MazeFactory.CUSTOM_MAZE_NAME)) {
-                this.maze =
-                        MazeFactory.readBoardFromString(MazeFactory.PreConfiguredMaze.ITEMS.get(preConfiguredMazeName));
+                this.maze = MazeFactory.readBoardFromString(
+                        MazeFactory.PreConfiguredMaze.ITEMS.get(preConfiguredMazeName));
             } else {
                 this.maze = MazeFactory.readBoardFromFile(filename);
             }
@@ -125,10 +125,10 @@ public class PacmanController implements PacmanMazeController, NetworkController
         } catch (IOException e) {
             if (this.view != null) {
                 this.view.alert(
-                    "Failed to load from file \"" + filename + "\":" + e.getMessage());
+                        "Failed to load from file \"" + filename + "\":" + e.getMessage());
             } else {
                 System.err.println(
-                    "Failed to load from file \"" + filename + "\":" + e.getMessage());
+                        "Failed to load from file \"" + filename + "\":" + e.getMessage());
             }
         }
         return false;
@@ -420,7 +420,8 @@ public class PacmanController implements PacmanMazeController, NetworkController
             if (Arrays.asList(PacmanAgent.NAMES).contains(selectionItem.getAgentName())) {
                 this.maze.pacmanVisit(pacmanNum, pacman.get(pacmanNum).getX(),
                         pacman.get(pacmanNum).getY());
-                this.view.addPacman(maze, pacman.get(pacmanNum).getX(), pacman.get(pacmanNum).getY(), pacmanNum,
+                this.view.addPacman(maze,
+                        pacman.get(pacmanNum).getX(), pacman.get(pacmanNum).getY(), pacmanNum,
                         algorithmFactory.createAlgorithm(selectionItem.getAlgorithmName()),
                         isSelf);
                 pacmanNum++;

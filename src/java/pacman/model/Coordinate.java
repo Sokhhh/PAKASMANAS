@@ -7,23 +7,23 @@ package pacman.model;
  */
 public class Coordinate implements Comparable<Coordinate> {
     /** Contains the number of column. */
-    private final int x;
+    private final int coordinateX;
 
     /** Contains the number of row. */
-    private final int y;
+    private final int coordinateY;
 
     /**
      * Constructor that creates a new Coordinate instance.
      *
      * @requires row >= 0 &amp; column >= 0
-     * @modifies {@link #y}, {@link #x}
+     * @modifies {@link #coordinateY}, {@link #coordinateX}
      * @effects {@code this.x = x; this.y = y}
      * @param x the number of column
      * @param y the number of row
      */
     public Coordinate(final int x, final int y) {
-        this.x = x;
-        this.y = y;
+        this.coordinateX = x;
+        this.coordinateY = y;
     }
 
     /**
@@ -32,7 +32,7 @@ public class Coordinate implements Comparable<Coordinate> {
      * @return the number of row
      */
     public int getY() {
-        return y;
+        return coordinateY;
     }
 
     /**
@@ -41,7 +41,7 @@ public class Coordinate implements Comparable<Coordinate> {
      * @return the number of column
      */
     public int getX() {
-        return x;
+        return coordinateX;
     }
 
     /**
@@ -55,13 +55,13 @@ public class Coordinate implements Comparable<Coordinate> {
     public Coordinate next(Direction d) {
         switch (d) {
             case UP:
-                return new Coordinate(this.y - 1, x);
+                return new Coordinate(coordinateX, coordinateY - 1);
             case DOWN:
-                return new Coordinate(this.y + 1, x);
+                return new Coordinate(coordinateX, coordinateY + 1);
             case RIGHT:
-                return new Coordinate(this.y, this.x + 1);
+                return new Coordinate(coordinateX + 1, coordinateY);
             case LEFT:
-                return new Coordinate(this.y, this.x - 1);
+                return new Coordinate(coordinateX - 1, coordinateY);
             default:
                 return null;
         }
@@ -108,15 +108,15 @@ public class Coordinate implements Comparable<Coordinate> {
      */
     @Override
     public int compareTo(Coordinate that) {
-        if (this.y < that.y) {
+        if (this.coordinateY < that.coordinateY) {
             return -1;
-        } else if (this.y > that.y) {
+        } else if (this.coordinateY > that.coordinateY) {
             return 1;
         }
 
-        if (this.x < that.x) {
+        if (this.coordinateX < that.coordinateX) {
             return -1;
-        } else if (this.x > that.x) {
+        } else if (this.coordinateX > that.coordinateX) {
             return 1;
         }
         return 0;
@@ -177,7 +177,7 @@ public class Coordinate implements Comparable<Coordinate> {
             return false;
         }
         Coordinate that = (Coordinate) o;
-        return y == that.y && x == that.x;
+        return coordinateY == that.coordinateY && coordinateX == that.coordinateX;
     }
 
     /**
@@ -217,7 +217,8 @@ public class Coordinate implements Comparable<Coordinate> {
      */
     @Override
     public int hashCode() {
-        return y + (x + (((y + 1) / 2) * ((y + 1) / 2))); // bijective function
+        return coordinateY + (coordinateX
+                + (((coordinateY + 1) / 2) * ((coordinateY + 1) / 2))); // bijective function
     }
 
     /**
@@ -231,6 +232,6 @@ public class Coordinate implements Comparable<Coordinate> {
      * @return  a string representation of the object.
      */
     public String toString() {
-        return "(" + (y + 1) + ", " + (x + 1) + ")";
+        return "(" + (coordinateY + 1) + ", " + (coordinateX + 1) + ")";
     }
 }

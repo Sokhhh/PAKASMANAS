@@ -102,6 +102,7 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
      * @param currDepth the depth of searching in the recursive function
      * @param isMaximizing if the searching is trying to maximizing the player
      * @param agentName the name of the agent
+     * @param isScared  if the ghost is scared
      * @return the minimax evaluation score for the current state
      */
     double minimax(int x, int y, int currDepth, boolean isMaximizing,

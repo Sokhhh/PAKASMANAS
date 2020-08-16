@@ -1,34 +1,48 @@
 package pacman.viewer;
 
 import golgui.components.GuiComponentFactory;
-import pacman.agents.GhostAgent;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.event.ActionListener;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.SwingConstants;
 import pacman.algorithms.AlgorithmFactory;
 import pacman.util.PacmanTheme;
+import pacman.util.StringUtilities;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionListener;
-
-
+/**
+ * Contains a component that can let user choose which character to controll when
+ * the game starts.
+ *
+ * @version 1.0
+ */
 public class AgentItemPanel extends JPanel {
     private final JRadioButton check;
     private final String name;
     private final JComboBox<String> algorithmChoices;
-    private final JComboBox<String> iconChoices;
-    private final JLabel nameLabel;
+    private final JComboBox<String> iconChoices = null;  // Not supported yet
 
+    /**
+     * Creates a new AgentItemPanel instance.
+     *
+     * @param name the name of the agent
+     * @param check JRadioButton object to select/unselect the agent item
+     */
     public AgentItemPanel(String name, JRadioButton check) {
         super(new GridLayout(1, 3));
         this.setOpaque(false);
         boolean isGhost = !name.equalsIgnoreCase("pacman");
-        this.iconChoices = createIconSelectionBox(isGhost);
+        // Not supported due to strict scheduling
+        // this.iconChoices = createIconSelectionBox(isGhost);
         // this.add(iconChoices);
         this.name = name;
-        this.nameLabel =
-                new JLabel(name.substring(0, 1).toUpperCase() + name.substring(1)
-                        + (isGhost ? " ghost" : ""));
-        this.nameLabel.setForeground(PacmanTheme.WELCOME_TEXT);
-        this.nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        JLabel nameLabel = new JLabel(StringUtilities.capitalize(name)
+                + (isGhost ? " ghost" : ""));
+        nameLabel.setForeground(PacmanTheme.WELCOME_TEXT);
+        nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
         this.add(nameLabel);
         this.algorithmChoices = createAlgorithmSelectionBox();
         this.add(algorithmChoices);
@@ -38,7 +52,16 @@ public class AgentItemPanel extends JPanel {
         this.add(check);
     }
 
+    /**
+     * Creates a combo box to select the icon.
+     *
+     * @param isGhost if the agent is a ghost agent
+     * @return the combo box created
+     */
     private static JComboBox<String> createIconSelectionBox(boolean isGhost) {
+        throw new UnsupportedOperationException("Changing agent icon is currently "
+                + "not supported");
+        /*
         JComboBox<String> ret =
                 GuiComponentFactory.createComboBox(PacmanTheme.BUTTON_HOVERED,
                         PacmanTheme.WELCOME_BACKGROUND, PacmanTheme.WELCOME_TEXT);
@@ -51,8 +74,14 @@ public class AgentItemPanel extends JPanel {
         }
         ret.setFont(new Font("SansSerif", Font.PLAIN, 16));
         return ret;
+        */
     }
 
+    /**
+     * Creates a combo box to choose the algorithm the agent use.
+     *
+     * @return the created combo box
+     */
     private static JComboBox<String> createAlgorithmSelectionBox() {
         JComboBox<String> ret =
                 GuiComponentFactory.createComboBox(PacmanTheme.BUTTON_HOVERED,
@@ -77,6 +106,7 @@ public class AgentItemPanel extends JPanel {
 
     /**
      * Adds an <code>ActionListener</code> to the checkbox.
+     *
      * @param l the <code>ActionListener</code> to be added
      */
     public void addCheckBoxActionListener(ActionListener l) {
@@ -86,6 +116,7 @@ public class AgentItemPanel extends JPanel {
     /**
      * Gets the state of the button. True if the
      * toggle button is selected, false if it's not.
+     *
      * @return true if the toggle button is selected, otherwise false
      */
     public boolean isSelected() {
@@ -112,6 +143,7 @@ public class AgentItemPanel extends JPanel {
 
     /**
      * Returns a string representation of this component and its values.
+     *
      * @return    a string representation of this component
      */
     @Override

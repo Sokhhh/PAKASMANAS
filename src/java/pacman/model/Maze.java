@@ -1,7 +1,13 @@
 package pacman.model;
 
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import pacman.util.Logger;
 
 /**
@@ -128,7 +134,8 @@ public class Maze {
      * @param ghostStartLocations the pre-configured starter positions for ghosts
      */
     public Maze(final int width, final int height, final int[][] data,
-                final Set<Coordinate> pacmanStartLocations, final Set<Coordinate> ghostStartLocations) {
+                final Set<Coordinate> pacmanStartLocations,
+                final Set<Coordinate> ghostStartLocations) {
         this.height = height;
         this.width = width;
         this.data = data;
@@ -318,7 +325,6 @@ public class Maze {
     }
 
     /**
-     *
      * This function will get the coordinates of all walls in the maze.
      *
      * @return the coordinates of all walls in the maze.
@@ -436,6 +442,7 @@ public class Maze {
      * 
      * @param x the x coordinate of the block
      * @param y the y coordinate of the block
+     * @param d the direction of the move
      * @requires None
      * @modifies None
      * @effects None
@@ -531,7 +538,8 @@ public class Maze {
      */
     public int pacmanVisit(final int index, final int x, final int y) {
         if (!this.isValidBlock(x, y)) {
-            Logger.printlnf("Pacman shouldn't be at %s, check what happened?",  new Coordinate(x, y));
+            Logger.printlnf("Pacman shouldn't be at %s, check what happened?",
+                new Coordinate(x, y));
             return 0;
         }
         if (!this.pacmanScores.containsKey(index)) {
@@ -622,6 +630,9 @@ public class Maze {
         ghostScaredTimes.put(ghostName, scaredTime[0]);
         Timer countDownGhostBuster = new Timer();
         countDownGhostBuster.scheduleAtFixedRate(new TimerTask() {
+            /**
+             * The action to be performed by this timer task.
+             */
             public void run() {
                 scaredTime[0]--;
                 ghostScaredTimes.put(ghostName, scaredTime[0]);
@@ -644,6 +655,24 @@ public class Maze {
         ghostScaredTimes.put(ghostName, 0);
     }
 
+    /**
+     * Check the state of the maze to see if the pacman wins.
+     *
+     * @param x the current x coordinate of the agent
+     * @param y the current y coordinate of the agent
+     * @return {@code true} if the pacman wins and {@code false} otherwise
+     */
+    public boolean isWin(int x, int y) {
+        return foods.contains(new Coordinate(x, y)) && foods.size() == 1;
+    }
+
+    /**
+     * Check the state of the maze to see if the pacman loses.
+     *
+     * @param x the current x coordinate of the agent
+     * @param y the current y coordinate of the agent
+     * @return {@code true} if the pacman loses and {@code false} otherwise
+     */
     public boolean isLose(int x, int y) {
         for (String ghostName: ghostLocations.keySet()) {
             if (ghostLocations.get(ghostName).equals(new Coordinate(x, y))
@@ -652,9 +681,5 @@ public class Maze {
             }
         }
         return false;
-    }
-
-    public boolean isWin(int x, int y) {
-        return foods.contains(new Coordinate(x, y)) && foods.size() == 1;
     }
 }

@@ -1,13 +1,23 @@
 package pacman.viewer;
 
-import pacman.util.PacmanTheme;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import pacman.util.PacmanTheme;
 
-public class PacmanViewFactory {
+/**
+ * Contains a utility for creating Swing components in the application.
+ *
+ * @version 1.0
+ */
+public class PacmanViewUtility {
+    /**
+     * Adds a hovering effect to a JButton.
+     *
+     * @param button the JButton object
+     */
     public static void addMouseHoveringEffectAtStart(JButton button) {
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
@@ -61,6 +71,11 @@ public class PacmanViewFactory {
         });
     }
 
+    /**
+     * Adds a hovering effect to a JButton.
+     *
+     * @param button the JButton object
+     */
     public static void addMouseHoveringEffectAtGame(JButton button) {
         button.setContentAreaFilled(false);
         button.setFocusPainted(false);
@@ -114,8 +129,4 @@ public class PacmanViewFactory {
         });
     }
 
-    public static String makeHTML(String str) {
-        return "<html>" + str.replaceAll(System.lineSeparator(), "<br>").replaceAll("\n", "<br>")
-                + "</html>";
-    }
 }

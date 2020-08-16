@@ -2,6 +2,12 @@ package pacman.controller;
 
 import pacman.agents.AbstractAgent;
 
+/**
+ * Contains a fake controller which does nothing in every action, mainly for
+ * testing purposes.
+ *
+ * @version 1.0
+ */
 public class FakeMazeController implements PacmanMazeController {
     /**
      * Adds the pacman to the maze and to the view.

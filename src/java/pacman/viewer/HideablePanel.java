@@ -1,12 +1,25 @@
 package pacman.viewer;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.CardLayout;
+import javax.swing.JPanel;
 
+/**
+ * Contains a component that can hide its content.
+ *
+ * @version 1.0
+ */
 public class HideablePanel extends JPanel {
 
-    CardLayout layout;
+    /**
+     * Contains the CardLayout object.
+     */
+    private final CardLayout layout;
 
+    /**
+     * Creates a new hideable panel.
+     *
+     * @param innerPanel the inner JPanel
+     */
     public HideablePanel(JPanel innerPanel) {
         this.setBackground(innerPanel.getBackground());
         this.setOpaque(innerPanel.isOpaque());
@@ -20,18 +33,23 @@ public class HideablePanel extends JPanel {
         layout.show(this, "visible");
     }
 
+    /**
+     * Shows the panel.
+     */
     public void showPanel() {
         layout.show(this, "visible");
     }
 
+    /**
+     * Hides the panel.
+     */
     public void hidePanel() {
         layout.show(this, "invisible");
     }
 
     /**
-     * Makes the component visible or invisible.
-     * Different from {@code Component.setVisible}, this method does not change
-     * the size of the panel.
+     * Makes the component content visible or invisible. Different from {@code
+     * Component.setVisible}, this method does not change the size of the panel.
      *
      * @param result  true to make the component visible; false to
      *          make it invisible

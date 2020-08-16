@@ -1,9 +1,6 @@
 package pacman.algorithms;
 
 import pacman.model.Coordinate;
-import pacman.model.Maze;
-
-import java.util.Set;
 
 /**
  * Contains utilities that will be used in pacman algorithms.

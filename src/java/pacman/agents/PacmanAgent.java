@@ -66,6 +66,11 @@ public class PacmanAgent extends AbstractAgent {
                 coordinateY, currDirection));
     }
 
+    /**
+     * Gets the index of the pacman.
+     *
+     * @return the index of the pacman
+     */
     public int getIndex() {
         return index;
     }

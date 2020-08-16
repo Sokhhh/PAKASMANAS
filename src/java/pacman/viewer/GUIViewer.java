@@ -8,32 +8,77 @@ import battleship.components.NetworkStatusPanel;
 import gol.viewer.UserInteraction;
 import golgui.components.GuiComponentFactory;
 import golgui.components.GuiMessenger;
+import golgui.utils.LocalFileOperator;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
 import java.net.SocketAddress;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.prefs.Preferences;
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.ButtonGroup;
+import javax.swing.InputMap;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JSeparator;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import golgui.utils.LocalFileOperator;
+import pacman.agents.AbstractAgent;
+import pacman.agents.ControlledGhostAgent;
+import pacman.agents.ControlledPacmanAgent;
+import pacman.agents.GhostAgent;
+import pacman.agents.KeyboardControlledAgent;
+import pacman.agents.MazePanel;
+import pacman.agents.PacmanAgent;
 import pacman.algorithms.AbstractAlgorithm;
-import pacman.agents.*;
 import pacman.algorithms.NullAlgorithm;
 import pacman.controller.FakeMazeController;
 import pacman.controller.PacmanController;
 import pacman.model.Coordinate;
 import pacman.model.Maze;
 import pacman.network.SimpleP2PServer;
-import pacman.util.*;
+import pacman.util.ImageInterning;
+import pacman.util.Logger;
+import pacman.util.MazeFactory;
+import pacman.util.Music;
+import pacman.util.PacmanTheme;
+import pacman.util.StringUtilities;
 
+/**
+ * This is an implementation of the program viewer in a GUI window.
+ *
+ * @version 1.0
+ */
 public class GUIViewer extends JFrame implements UserInteraction {
     /** Contains the controller of the application. */
     private final PacmanController controller;
@@ -66,6 +111,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
     private JPanel clientListPanel;
     private JPanel playerPanel;
     private JPanel levelPanel;
+    private List<AgentItemPanel> players;
     private ButtonGroup advancedPlayerSelectionGroup;
     private Map<JRadioButton, String> advancedPlayerSelectionName;
     /**
@@ -95,7 +141,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
              */
             @Override
             public void windowClosing(WindowEvent event) {
-                backgroundMusic.stopMusic();
+                backgroundMusic.stop();
                 controller.exit();
             }
         });
@@ -263,7 +309,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         // Area for buttons
         JButton startButton = new JButton("START GAME");
         startButton.setToolTipText("Quick start a game");
-        PacmanViewFactory.addMouseHoveringEffectAtStart(startButton);
+        PacmanViewUtility.addMouseHoveringEffectAtStart(startButton);
         /*
          *               Layout:
          *   +--------------------------------------------------lowerPartPanel--+
@@ -305,7 +351,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
 
         JButton multiplayerButton = new JButton("ADVANCED / MULTIPLAYER");
         multiplayerButton.setToolTipText("Customize a game");
-        PacmanViewFactory.addMouseHoveringEffectAtStart(multiplayerButton);
+        PacmanViewUtility.addMouseHoveringEffectAtStart(multiplayerButton);
         multiplayerButton.setFont(new Font("Dialog", Font.BOLD, 22));
         multiplayerButton.addActionListener(e -> {
             controller.showAdvancedStart();
@@ -330,6 +376,8 @@ public class GUIViewer extends JFrame implements UserInteraction {
 
     /**
      * Creates a panel to select level and maze.
+     *
+     * @return the panel to select level and maze
      */
     private JPanel createLevelChoicesPanel() {
         JPanel levelChoicesPanel = new JPanel(new BorderLayout(15, 5));
@@ -351,7 +399,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
                 MazeFactory.PreConfiguredMaze.SMALL_CLASSIC_NAME));
         levelChoicesPanel.add(levelChoicesComboBox, BorderLayout.CENTER);
         JButton previewButton = new JButton(" PREVIEW ");
-        PacmanViewFactory.addMouseHoveringEffectAtStart(previewButton);
+        PacmanViewUtility.addMouseHoveringEffectAtStart(previewButton);
         previewButton.setFont(new Font("SansSerif", Font.PLAIN, 18));
         levelChoicesPanel.add(previewButton, BorderLayout.EAST);
         JLabel customLabel = new JLabel("Custom input file:");
@@ -367,7 +415,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
                 PacmanTheme.WELCOME_TEXT));
         customLabel.setLabelFor(customInputFileTextField);
         JButton browseButton = new JButton(" Browse ");
-        PacmanViewFactory.addMouseHoveringEffectAtStart(browseButton);
+        PacmanViewUtility.addMouseHoveringEffectAtStart(browseButton);
         browseButton.addActionListener(new ActionListener() {
             /**
              * {@inheritDoc} Invoked when a mouse button
@@ -407,7 +455,8 @@ public class GUIViewer extends JFrame implements UserInteraction {
         customLevelInnerPanel.add(customInputFileTextField, BorderLayout.CENTER);
         customLevelInnerPanel.add(browseButton, BorderLayout.EAST);
         HideablePanel customLevelPanel = new HideablePanel(customLevelInnerPanel);
-        customLevelPanel.setHide(levelChoicesComboBox.getSelectedItem().equals(MazeFactory.CUSTOM_MAZE_NAME));
+        customLevelPanel.setHide(levelChoicesComboBox.getSelectedItem()
+                .equals(MazeFactory.CUSTOM_MAZE_NAME));
 
         // Set combobox actions
         levelChoicesComboBox.addActionListener(e -> {
@@ -441,9 +490,9 @@ public class GUIViewer extends JFrame implements UserInteraction {
         JPanel networkPanel = new JPanel();
         networkPanel.setOpaque(false);
         networkPanel.setLayout(new BoxLayout(networkPanel, BoxLayout.Y_AXIS));
-        networkPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(
-                PacmanTheme.WELCOME_TEXT, 2), BorderFactory.createEmptyBorder(15,15,
-                15,15)));
+        networkPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PacmanTheme.WELCOME_TEXT, 2),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)));
 
         JLabel networkSettingsLabel = ComponentFactory.createLabel(
                 "Network settings:", true, 20);
@@ -469,9 +518,10 @@ public class GUIViewer extends JFrame implements UserInteraction {
              */
             @Override
             public void mouseClicked(final MouseEvent e) {
-                if (askOkCancel(PacmanViewFactory.makeHTML(SimpleP2PServer.LOCAL_IP_TROUBLESHOOT_MSG))) {
+                if (askOkCancel(StringUtilities.makeHTML(
+                        SimpleP2PServer.LOCAL_IP_TROUBLESHOOT_MSG))) {
                     JOptionPane.showConfirmDialog(null,
-                            PacmanViewFactory.makeHTML(SimpleP2PServer.getSystemIPConfig()),
+                            StringUtilities.makeHTML(SimpleP2PServer.getSystemIPConfig()),
                             "Troubleshoot", JOptionPane.DEFAULT_OPTION);
                 }
             }
@@ -540,14 +590,14 @@ public class GUIViewer extends JFrame implements UserInteraction {
         levelPanel = new JPanel();
         levelPanel.setOpaque(false);
         levelPanel.setLayout(new BoxLayout(levelPanel, BoxLayout.Y_AXIS));
-        levelPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(
-                PacmanTheme.WELCOME_TEXT, 2), BorderFactory.createEmptyBorder(15,15,
-                15,15)));
+        levelPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PacmanTheme.WELCOME_TEXT, 2),
+                BorderFactory.createEmptyBorder(15, 15, 15, 15)));
 
         levelPanel.add(createLevelChoicesPanel());
 
         JButton loadMapButton = new JButton("  Load map  ");
-        PacmanViewFactory.addMouseHoveringEffectAtStart(loadMapButton);
+        PacmanViewUtility.addMouseHoveringEffectAtStart(loadMapButton);
         loadMapButton.addActionListener(e -> {
             controller.advancedLoad((String) levelChoicesComboBoxs.get(1).getSelectedItem(),
                     customInputFileTextFields.get(1).getText());
@@ -571,12 +621,12 @@ public class GUIViewer extends JFrame implements UserInteraction {
         label1.setForeground(PacmanTheme.WELCOME_TEXT);
         label1.setHorizontalAlignment(SwingConstants.CENTER);
         playerSelectionTitlePanel.add(label1);
-        JLabel label2 = ComponentFactory.createLabel(PacmanViewFactory.makeHTML("Select "
+        JLabel label2 = ComponentFactory.createLabel(StringUtilities.makeHTML("Select "
                 + "what algorithm will this <br> player use if AI takes over"), false, 16);
         label2.setForeground(PacmanTheme.WELCOME_TEXT);
         label2.setHorizontalAlignment(SwingConstants.CENTER);
         playerSelectionTitlePanel.add(label2);
-        JLabel label3 = ComponentFactory.createLabel(PacmanViewFactory.makeHTML("Will you "
+        JLabel label3 = ComponentFactory.createLabel(StringUtilities.makeHTML("Will you "
                 + "control <br> this player?"), false, 16);
         label3.setForeground(PacmanTheme.WELCOME_TEXT);
         label3.setHorizontalAlignment(SwingConstants.CENTER);
@@ -596,22 +646,26 @@ public class GUIViewer extends JFrame implements UserInteraction {
         levelPanel.add(playerPanel);
         levelPanel.add(Box.createVerticalStrut(15));
         JButton startGameButton = new JButton("Start Game");
-        PacmanViewFactory.addMouseHoveringEffectAtStart(startGameButton);
+        PacmanViewUtility.addMouseHoveringEffectAtStart(startGameButton);
         startGameButton.addActionListener(e -> {
             String selectedName = getSelectedName();
             controller.advancedStart(selectedName, agentItemPanels);
         });
         JButton backToMainMenuButton = new JButton("Back to main menu");
-        PacmanViewFactory.addMouseHoveringEffectAtStart(backToMainMenuButton);
+        PacmanViewUtility.addMouseHoveringEffectAtStart(backToMainMenuButton);
         backToMainMenuButton.addActionListener(e -> {
             controller.hostCloseConnection();
             showStartUpInterface();
         });
 
         networkSelectorContentPane.add(levelPanel, BorderLayout.CENTER);
-        networkSelectorContentPane.add(GuiComponentFactory.wrapInEquallyDividedPanel(startGameButton, backToMainMenuButton), BorderLayout.SOUTH);
+        networkSelectorContentPane.add(GuiComponentFactory.wrapInEquallyDividedPanel(
+                startGameButton, backToMainMenuButton), BorderLayout.SOUTH);
     }
 
+    /**
+     * Adds the list of client to the panel showing the clients.
+     */
     private void setUpClientListPanel() {
         clientListPanel.removeAll();
         Set<SocketAddress> clientAddresses = controller.getClientList();
@@ -633,8 +687,12 @@ public class GUIViewer extends JFrame implements UserInteraction {
         clientListPanel.repaint();
     }
 
-    private List<AgentItemPanel> players;
-
+    /**
+     * Sets up the panel that can be used to choose which agent to be controlled
+     * in the game.
+     *
+     * @param maze the the maze of the game
+     */
     public void setUpPlayerListPanel(Maze maze) {
         players.clear();
         advancedPlayerSelectionName.clear();
@@ -722,7 +780,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
      */
     public void start(final Maze maze) {
         // Music
-        backgroundMusic.startMusic();
+        backgroundMusic.start();
 
         // Interface
         final JPanel gamePanel = new JPanel(new BorderLayout());
@@ -753,18 +811,18 @@ public class GUIViewer extends JFrame implements UserInteraction {
         statsPanelsList.add(lifePanel);
 
         JButton musicButton = new JButton("Music");
-        PacmanViewFactory.addMouseHoveringEffectAtGame(musicButton);
+        PacmanViewUtility.addMouseHoveringEffectAtGame(musicButton);
         musicButton.addActionListener(e -> {
-            if (backgroundMusic.isStop()) {
-                backgroundMusic.startMusic();
+            if (backgroundMusic.isRunning()) {
+                backgroundMusic.stop();
             } else {
-                backgroundMusic.stopMusic();
+                backgroundMusic.start();
             }
         });
         statsPanelsList.add(musicButton);
 
         JButton takeOverButton = new JButton("Start/stop AI takeover");
-        PacmanViewFactory.addMouseHoveringEffectAtGame(takeOverButton);
+        PacmanViewUtility.addMouseHoveringEffectAtGame(takeOverButton);
         takeOverButton.addActionListener(e -> {
             if (self.aiTakeOver()) {
                 notification("AI is now moving your player. Relax.");
@@ -775,7 +833,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         statsPanelsList.add(takeOverButton);
 
         JButton closeGameButton = new JButton("Back to main menu");
-        PacmanViewFactory.addMouseHoveringEffectAtGame(closeGameButton);
+        PacmanViewUtility.addMouseHoveringEffectAtGame(closeGameButton);
         closeGameButton.addActionListener(e -> {
             if (ask("Are you sure you want to exit?")) {
                 controller.backToMainMenu();
@@ -788,7 +846,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         for (JComponent comp: statsPanelsList) {
             statusPanel.add(comp);
         }
-        statusPanel.setBorder(BorderFactory.createEmptyBorder(0, 15,  15,15));
+        statusPanel.setBorder(BorderFactory.createEmptyBorder(0, 15,  15, 15));
         gamePanel.add(statusPanel, BorderLayout.SOUTH);
 
         // Game at the center
@@ -802,6 +860,16 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.setLocationRelativeTo(null);
     }
 
+    /**
+     * Adds a pacman agent into the gmae view.
+     *
+     * @param maze the the maze of the game
+     * @param x the x coordinate of the pacman
+     * @param y the y coordinate of the pacman
+     * @param index the index of the pacman
+     * @param algorithm the algorithm chosen for determining next move
+     * @param isSelf if the agent is controlled by the local host user
+     */
     public void addPacman(final Maze maze, final int x, final int y, int index,
                    AbstractAlgorithm algorithm, boolean isSelf) {
         PacmanAgent agent;
@@ -815,6 +883,16 @@ public class GUIViewer extends JFrame implements UserInteraction {
         pacmanAgents.put(index, agent);
     }
 
+    /**
+     * Adds a ghost agent into the gmae view.
+     *
+     * @param maze the the maze of the game
+     * @param x the x coordinate of the ghost
+     * @param y the y coordinate of the ghost
+     * @param name the name of the ghost agent
+     * @param algorithm the algorithm chosen for determining next move
+     * @param isSelf if the agent is controlled by the local host user
+     */
     public void addGhost(final Maze maze, final int x, final int y, String name,
                          AbstractAlgorithm algorithm, boolean isSelf) {
         GhostAgent agent;
@@ -834,7 +912,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
     // ==================================================================================
 
     /**
-     * Gets the users' choice on the input files and put them into settings
+     * Gets the users' choice on the input files and put them into settings.
      *
      * @param index the index of interface which is shown when the request is sent
      */
@@ -866,7 +944,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
             i++;
         }
         JButton closeBtn = new JButton("CLOSE");
-        PacmanViewFactory.addMouseHoveringEffectAtGame(closeBtn);
+        PacmanViewUtility.addMouseHoveringEffectAtGame(closeBtn);
         JFrame frame = new JFrame();
         frame.getContentPane().setLayout(new BorderLayout());
         frame.add(mazePanel, BorderLayout.CENTER);
@@ -893,7 +971,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
             agent.stop();
         }
         ghostAgents.clear();
-        backgroundMusic.stopMusic();
+        backgroundMusic.stop();
         showStartUpInterface();
     }
 
@@ -920,7 +998,11 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.lifeText.setText("x" + lives);
     }
 
-
+    /**
+     * Stops the movement of every agent in the game.
+     *
+     * @param win if the pacman wins
+     */
     public void gameOver(boolean win) {
         for (AbstractAgent agent: ghostAgents.values()) {
             agent.stop();
@@ -928,7 +1010,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         for (AbstractAgent agent: pacmanAgents.values()) {
             agent.stop();
         }
-        backgroundMusic.stopMusic();
+        backgroundMusic.stop();
     }
 
     /**
@@ -981,6 +1063,12 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.ghostAgents.get(ghostName).reset();
     }
 
+    /**
+     * Sets the scared time of a ghost agent in the game.
+     *
+     * @param ghostName the name of the ghost
+     * @param scaredTime the time being scared.
+     */
     public void setGhostScared(String ghostName, int scaredTime) {
         this.ghostAgents.get(ghostName).setScared(scaredTime);
     }
@@ -1044,6 +1132,11 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.networkStatusPanel.waitForConnection();
     }
 
+    /**
+     * Gets the selected user controlled agent name.
+     *
+     * @return the name of the selected user controlled agent
+     */
     public String getSelectedName() {
         String selectedName = null;
         for (AgentItemPanel item: agentItemPanels) {
@@ -1054,6 +1147,12 @@ public class GUIViewer extends JFrame implements UserInteraction {
         return selectedName;
     }
 
+    /**
+     * Gets the list containing all components representing selection of agents in
+     * the maze.
+     *
+     * @return a list containing all components representing selection of agents
+     */
     public List<AgentItemPanel> getAgentItemPanels() {
         return agentItemPanels;
     }

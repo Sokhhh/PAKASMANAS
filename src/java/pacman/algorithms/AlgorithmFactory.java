@@ -116,6 +116,6 @@ public class AlgorithmFactory {
             throw new IllegalArgumentException("Unknown algorithm name.");
         }
         return library.computeIfAbsent(name,
-                k -> SupportedAlgorithms.values.get(k).apply(maze));
+            k -> SupportedAlgorithms.values.get(k).apply(maze));
     }
 }

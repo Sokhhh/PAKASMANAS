@@ -143,6 +143,9 @@ public class GhostAgent extends AbstractAgent {
         }
         countDownGhostBuster = new Timer();
         countDownGhostBuster.scheduleAtFixedRate(new TimerTask() {
+            /**
+             * The action to be performed by this timer task.
+             */
             public void run() {
                 isScared = false;
                 if (direction == Direction.STOP) {
