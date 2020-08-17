@@ -15,6 +15,7 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
@@ -95,13 +96,8 @@ public class SimpleP2PServer {
      *
      * @param controller the controller of this application
      * @param maxClientNum the maximum number of clients
-     * @throws   IOException  if an I/O error occurs when opening the socket.
-     * @throws   SecurityException
-     *      if a security manager exists and its {@code checkListen}
-     *      method doesn't allow the operation.
      */
-    public SimpleP2PServer(NetworkController controller, int maxClientNum) throws IOException,
-        SecurityException {
+    public SimpleP2PServer(NetworkController controller, int maxClientNum) {
         this.controller = controller;
         this.maxConnections = maxClientNum;
         this.isListening = new AtomicBoolean(false);
@@ -299,7 +295,7 @@ public class SimpleP2PServer {
             // client accepted
             Logger.printlnf("Receive connection on %s",
                     newConnectionSocket.getRemoteSocketAddress());
-            if (connectionSockets.size() + 1 > maxConnections || !isListening.get()) {
+            if (connectionSockets.size() + 2 > maxConnections || !isListening.get()) {
                 newConnectionSocket.close();
                 continue;
             }
@@ -408,6 +404,7 @@ public class SimpleP2PServer {
      */
     public void closeAllConnection() throws IOException {
         for (SocketAddress address: new HashSet<>(this.connectionSockets.keySet())) {
+            Logger.printlnf("Closing address %s", address);
             closeConnection(address);
         }
     }
@@ -418,8 +415,8 @@ public class SimpleP2PServer {
      * @param client the socket representing the remote side
      */
     public void remoteCloseConnection(Socket client) {
-        this.controller.remoteCloseConnection(client.getRemoteSocketAddress());
         this.connectionSockets.remove(client.getRemoteSocketAddress());
+        this.controller.remoteCloseConnection(client.getRemoteSocketAddress());
     }
 
     // ==================================================================================
@@ -449,8 +446,6 @@ public class SimpleP2PServer {
         while (!line.equals("CLOSE")) {
             try {
                 line = in.readUTF();
-                Logger.printColor(Logger.ANSI_GREEN, "%s -> local: %s",
-                    client.getRemoteSocketAddress(), line);
                 controller.receiveRemoteMessage(client.getRemoteSocketAddress(),
                     line);
             } catch (RuntimeException e) {
@@ -470,32 +465,36 @@ public class SimpleP2PServer {
      * This method sends a message to a specified remote host.
      *
      * @param target the target to receive this message
-     * @param message the message that is about to be sent
+     * @param message the message that is about to be sent. Multiple parts of the
+     *                 message will be joined by a comma
      * @throws IOException  if an I/O error occurs when creating the
      *              output stream or if the socket is not connected.
      */
-    public void send(SocketAddress target, String message) throws IOException {
+    public void send(SocketAddress target, String... message) throws IOException {
         if (this.connectionSockets.get(target) == null) {
-            Logger.println("Cannot send message \"" + message + "\" without connection.");
+            Logger.println("Cannot send message \"" + Arrays.toString(message)
+                + "\" without connection.");
             return;
         }
         DataOutputStream out = new DataOutputStream(
             this.connectionSockets.get(target).getOutputStream());
-        out.writeUTF(message);
-        Logger.printColor(Logger.ANSI_YELLOW, "local -> %s: %s",
-            connectionSockets.get(target).getRemoteSocketAddress(), message);
+        out.writeUTF(String.join(",", message));
+        Logger.printColor(Logger.ANSI_YELLOW, 1, "-> %s: %s",
+            connectionSockets.get(target).getRemoteSocketAddress(), Arrays.toString(message));
     }
 
     /**
      * This method sends a message to every remote host.
      *
-     * @param message the message that is about to be sent
+     * @param message the message that is about to be sent. Multiple parts of the
+     *                message will be joined by a comma
      * @throws IOException  if an I/O error occurs when creating the
      *              output stream or if the socket is not connected.
      */
-    public void broadcast(String message) throws IOException {
+    public void broadcast(String... message) throws IOException {
         if (this.connectionSockets.isEmpty()) {
-            Logger.println("Cannot send message \"" + message + "\" without connection.");
+            Logger.println("Cannot send message \"" + Arrays.toString(message) + "\" without "
+                + "connection.");
             return;
         }
         for (Socket client: this.connectionSockets.values()) {

@@ -93,7 +93,6 @@ public abstract class AbstractAgent extends JLabel {
     protected final AbstractAlgorithm algorithm;
     private java.util.Timer hold;
 
-
     /**
      * Contains an Action object that applied when the user inputs a new direction. It
      * checks if that direction can be applied immediately: if so, it changes to that
@@ -342,9 +341,11 @@ public abstract class AbstractAgent extends JLabel {
      * @param d the new direction
      */
     protected void changeDirection(Direction d) {
-        direction = d;
-        directionChanged = true;
-        controller.notifyDirectionChange(d, this, coordinateX, coordinateY);
+        if (d != direction) {
+            direction = d;
+            directionChanged = true;
+            controller.notifyDirectionChange(d, this, coordinateX, coordinateY);
+        }
     }
 
     /**
@@ -359,6 +360,8 @@ public abstract class AbstractAgent extends JLabel {
             animation.stop();
         }
         setMazeLocation(Integer.parseInt(x), Integer.parseInt(y));
+        controller.agentVisit(AbstractAgent.this, coordinateX, coordinateY);
+        autoMoving.start();
         direction = d;
         directionChanged = true;
     }
@@ -375,9 +378,23 @@ public abstract class AbstractAgent extends JLabel {
         }
         setMazeLocation(Integer.parseInt(x), Integer.parseInt(y));
         setVisible(true);
+        controller.agentVisit(AbstractAgent.this, coordinateX, coordinateY);
         if (hold != null) {
-            controller.agentVisit(AbstractAgent.this, coordinateX, coordinateY);
             autoMoving.start();
         }
+    }
+
+    /**
+     * Returns a string representation of this component and its values.
+     * @return    a string representation of this component
+     * @since     JDK1.0
+     */
+    @Override
+    public String toString() {
+        return "AbstractAgent{"
+            + "coordinateX=" + coordinateX
+            + ", coordinateY=" + coordinateY
+            + ", direction=" + direction
+            + '}';
     }
 }

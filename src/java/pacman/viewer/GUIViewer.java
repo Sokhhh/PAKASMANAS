@@ -27,6 +27,7 @@ import java.net.SocketAddress;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -90,15 +91,32 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * Contains a GUI utility that can be used to handle communication with the user.
      */
     private final GuiMessenger messenger;
-    private JLabel scoreText;
-    private MazePanel mazePanel;
-    private JLabel lifeText;
-    private HashMap<Integer, PacmanAgent> pacmanAgents;
-    private HashMap<String, GhostAgent> ghostAgents;
-    private KeyboardControlledAgent self;
+
+    /**
+     * Background music of the game.
+     */
     private Music backgroundMusic;
+
+    /**
+     * A panel during the game showing the maze.
+     */
+    private MazePanel mazePanel;
+
+    /**
+     * Text label during the game showing the score of the game.
+     */
+    private JLabel scoreText;
+
+    /**
+     * Text label during the game showing the remaining life pacman has.
+     */
+    private JLabel lifeText;
+
+    private final LinkedHashMap<Integer, PacmanAgent> pacmanAgents;
+    private final LinkedHashMap<String, GhostAgent> ghostAgents;
+    private KeyboardControlledAgent self;
     private final Preferences settings;
-    private List<JComboBox<String>> levelChoicesComboBoxs;
+    private List<JComboBox<String>> levelChoicesComboBoxes;
     private List<JTextField> customInputFileTextFields;
 
     /** Contains a panel handling the local network address. */
@@ -116,11 +134,11 @@ public class GUIViewer extends JFrame implements UserInteraction {
     private JPanel levelPanel;
     private List<AgentItemPanel> players;
     private ButtonGroup advancedPlayerSelectionGroup;
-    private Map<JRadioButton, String> advancedPlayerSelectionName;
+    private final Map<JRadioButton, String> advancedPlayerSelectionName;
     /**
      * Contains a list of all choices of agents available in the maze.
      */
-    private List<AgentItemPanel> agentItemPanels;
+    private LinkedHashMap<String, AgentItemPanel> agentItemPanels;
     private JLabel selectPlayerLabel;
 
     /**
@@ -133,10 +151,10 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.settings = root.node("/edu/rpi/csci4963/pacman");
         this.messenger = new GuiMessenger(this);
         this.controller = controller;
-        this.pacmanAgents = new HashMap<>();
-        this.ghostAgents = new HashMap<>();
+        this.pacmanAgents = new LinkedHashMap<>();
+        this.ghostAgents = new LinkedHashMap<>();
         this.advancedPlayerSelectionName = new HashMap<>();
-        this.agentItemPanels = new ArrayList<>();
+        this.agentItemPanels = new LinkedHashMap<>();
 
         addWindowListener(new WindowAdapter() {
             /**
@@ -159,7 +177,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @effects None
      */
     public void run() {
-        levelChoicesComboBoxs = new ArrayList<>();
+        levelChoicesComboBoxes = new ArrayList<>();
         customInputFileTextFields = new ArrayList<>();
 
         this.setUpStartInterface();
@@ -169,7 +187,6 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.setTitle("Pacman");
 
         // make the frame visible
-        this.setLocationRelativeTo(null);
 
         this.pack();
 
@@ -183,6 +200,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         // arguments
         this.setVisible(true);
         this.showStartUpInterface();
+        this.setLocationRelativeTo(null);
     }
 
     // ==================================================================================
@@ -357,9 +375,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         multiplayerButton.setToolTipText("Customize a game");
         PacmanViewUtility.addMouseHoveringEffectAtStart(multiplayerButton);
         multiplayerButton.setFont(new Font("Dialog", Font.BOLD, 22));
-        multiplayerButton.addActionListener(e -> {
-            controller.showAdvancedStart();
-        });
+        multiplayerButton.addActionListener(e -> controller.showAdvancedStart());
 
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setOpaque(false);
@@ -459,8 +475,9 @@ public class GUIViewer extends JFrame implements UserInteraction {
         customLevelInnerPanel.add(customInputFileTextField, BorderLayout.CENTER);
         customLevelInnerPanel.add(browseButton, BorderLayout.EAST);
         HideablePanel customLevelPanel = new HideablePanel(customLevelInnerPanel);
-        customLevelPanel.setHide(levelChoicesComboBox.getSelectedItem()
-                .equals(MazeFactory.CUSTOM_MAZE_NAME));
+        boolean random = levelChoicesComboBox.getSelectedItem() == null || levelChoicesComboBox
+                .getSelectedItem().equals(MazeFactory.CUSTOM_MAZE_NAME);
+        customLevelPanel.setHide(random);
 
         // Set combobox actions
         levelChoicesComboBox.addActionListener(e -> {
@@ -469,7 +486,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
             } else {
                 customLevelPanel.setHide(false);
             }
-            for (JComboBox<String> comboBox: levelChoicesComboBoxs) {
+            for (JComboBox<String> comboBox: levelChoicesComboBoxes) {
                 if (comboBox != levelChoicesComboBox) {
                     comboBox.setSelectedItem(levelChoicesComboBox.getSelectedItem());
                 }
@@ -477,7 +494,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         });
         levelChoicesPanel.add(customLevelPanel, BorderLayout.SOUTH);
 
-        levelChoicesComboBoxs.add(levelChoicesComboBox);
+        levelChoicesComboBoxes.add(levelChoicesComboBox);
         customInputFileTextFields.add(customInputFileTextField);
         return levelChoicesPanel;
     }
@@ -616,7 +633,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
                 notification("You are not the host. You cannot change map settings.");
                 return;
             }
-            controller.advancedLoad((String) levelChoicesComboBoxs.get(1).getSelectedItem(),
+            controller.advancedLoad((String) levelChoicesComboBoxes.get(1).getSelectedItem(),
                     customInputFileTextFields.get(1).getText());
         });
 
@@ -687,7 +704,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
     /**
      * Adds the list of client to the panel showing the clients.
      */
-    private void updateClientListPanel() {
+    public void updateClientListPanel() {
         clientListPanel.removeAll();
         Set<SocketAddress> clientAddresses = controller.getClientList();
         if (clientAddresses.isEmpty()) {
@@ -723,7 +740,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
 
         advancedPlayerSelectionGroup = new ButtonGroup();
         if (maze != null) {
-            levelChoicesComboBoxs.get(1).setSelectedItem(mazeName);
+            levelChoicesComboBoxes.get(1).setSelectedItem(mazeName);
             selectPlayerLabel.setText("Select player for \"" + mazeName + "\":");
             for (int i = 0; i < Math.min(maze.getPacmanStartLocation().length,
                 PacmanAgent.NAMES.length); i++) {
@@ -740,7 +757,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
                     }
                 });
                 playerPanel.add(agentPanel);
-                agentItemPanels.add(agentPanel);
+                agentItemPanels.put(PacmanAgent.NAMES[i], agentPanel);
             }
             for (int i = 0; i < Math.min(maze.getGhostsStartLocation().length,
                 GhostAgent.NAMES.length); i++) {
@@ -756,7 +773,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
                     }
                 });
                 playerPanel.add(agentPanel);
-                agentItemPanels.add(agentPanel);
+                agentItemPanels.put(GhostAgent.NAMES[i], agentPanel);
             }
         } else {
             selectPlayerLabel.setText("Select player:");
@@ -768,10 +785,10 @@ public class GUIViewer extends JFrame implements UserInteraction {
                 .add(GuiComponentFactory.wrapInEquallyDividedPanel(selectPlayerLabel));
         }
 
-        for (AgentItemPanel agentPanel: agentItemPanels) {
+        for (AgentItemPanel agentPanel: agentItemPanels.values()) {
             agentPanel.addCheckBoxActionListener(e -> {
                 Logger.printlnf("Selected \"%s\"", agentPanel.getAgentName());
-                controller.userSelected(agentPanel.getAgentName());
+                controller.userSelected(agentPanel.getAgentName(), false);
                 controller.sendAgentSelection(agentPanel.getAgentName());
             });
         }
@@ -791,11 +808,12 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * Shows the start interface.
      */
     public void showStartUpInterface() {
+        this.setTitle("Pacman");
         this.setContentPane(startupContentPane);
         this.repaint();
         this.revalidate();
         this.pack();
-        this.setLocationRelativeTo(null);
+        this.setLocationRelativeTo(this);
     }
 
     /**
@@ -819,7 +837,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.repaint();
         this.revalidate();
         this.pack();
-        this.setLocationRelativeTo(null);
+        this.setLocationRelativeTo(this);
     }
 
     /**
@@ -885,6 +903,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         PacmanViewUtility.addMouseHoveringEffectAtGame(closeGameButton);
         closeGameButton.addActionListener(e -> {
             if (ask("Are you sure you want to exit?")) {
+                controller.hostCloseConnection();
                 controller.backToMainMenu();
             }
         });
@@ -906,7 +925,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.repaint();
         this.revalidate();
         this.pack();
-        this.setLocationRelativeTo(null);
+        this.setLocationRelativeTo(this);
     }
 
     /**
@@ -973,7 +992,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
      */
     public void askForInput(int index) {
         settings.put("Maze",
-                String.valueOf(levelChoicesComboBoxs.get(index).getSelectedItem()));
+                String.valueOf(levelChoicesComboBoxes.get(index).getSelectedItem()));
         settings.put("InputFile", customInputFileTextFields.get(index).getText());
     }
 
@@ -1011,7 +1030,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         frame.setResizable(false);
         frame.setTitle("Preview maze");
         frame.setVisible(true);
-        frame.setLocationRelativeTo(null);
+        frame.setLocationRelativeTo(this);
     }
 
     /**
@@ -1115,6 +1134,9 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @param ghostName the name of ghost
      */
     public void resetAgent(String ghostName) {
+        if (!ghostAgents.containsKey(ghostName)) {
+            Logger.err("Does not contain ghost %s, current: %s", ghostName, ghostAgents);
+        }
         this.ghostAgents.get(ghostName).reset();
     }
 
@@ -1179,9 +1201,16 @@ public class GUIViewer extends JFrame implements UserInteraction {
     /**
      * This method gets called when the remote side closes the connection.
      */
-    public void remoteConnectionClosed() {
+    public void restartListening() {
         this.remoteAddressPanel.setApplyBtnEnabled(true);
         this.networkStatusPanel.waitForConnection();
+    }
+
+    /**
+     * This method gets called when the remote side closes the connection.
+     */
+    public void reenableJoin() {
+        this.remoteAddressPanel.setApplyBtnEnabled(true);
     }
 
     /**
@@ -1191,22 +1220,12 @@ public class GUIViewer extends JFrame implements UserInteraction {
      */
     public String getSelectedName() {
         String selectedName = null;
-        for (AgentItemPanel item: agentItemPanels) {
+        for (AgentItemPanel item: agentItemPanels.values()) {
             if (item.isSelected()) {
                 selectedName = item.getAgentName();
             }
         }
         return selectedName;
-    }
-
-    /**
-     * Gets the list containing all components representing selection of agents in
-     * the maze.
-     *
-     * @return a list containing all components representing selection of agents
-     */
-    public List<AgentItemPanel> getAgentItemPanels() {
-        return agentItemPanels;
     }
 
     /**
@@ -1236,7 +1255,13 @@ public class GUIViewer extends JFrame implements UserInteraction {
         } else {
             agent = ghostAgents.get(agentName);
         }
-        agent.networkChangeDirection(d, x, y);
+        if (agent == null) {
+            Logger.err("ERROR when changing direction! Debug info:pacmanAgents = %s, "
+                    + "ghostAgents = %s, agentName = %s",
+                pacmanAgents.toString(), ghostAgents.toString(), agentName);
+        } else {
+            agent.networkChangeDirection(d, x, y);
+        }
     }
 
     /**
@@ -1255,5 +1280,37 @@ public class GUIViewer extends JFrame implements UserInteraction {
             agent = ghostAgents.get(agentName);
         }
         agent.networkChangeLocation(x, y);
+    }
+
+    /**
+     * Let AI takes over from the user.
+     *
+     * @param ghostName the name the name of ghost
+     */
+    public void aiTakeOver(String ghostName) {
+        ((ControlledGhostAgent) ghostAgents.get(ghostName)).aiTakeOver();
+        notification("Ghost \"" + ghostName + "\" is now controlled by AI");
+    }
+
+    /**
+     * Let AI takes over from the user.
+     *
+     * @param pacmanIndex the index of pacman
+     */
+    public void aiTakeOver(int pacmanIndex) {
+        ((ControlledPacmanAgent) pacmanAgents.get(pacmanIndex)).aiTakeOver();
+        notification("Pacman is now controlled by AI");
+    }
+
+    /**
+     * User selects a player to control in the game.
+     *
+     * @param agentName the name of the agent being selected
+     */
+    public void userSelected(final String agentName) {
+        if (agentName == null) {
+            return;
+        }
+        agentItemPanels.get(agentName).setSelected(true);
     }
 }

@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 /**
  * This class contains utility methods that will be used in the simulation.
  *
- * @version 1.0
+ * @version 1.1
  */
 public class EpidemicUtilities {
 

@@ -74,4 +74,15 @@ public class PacmanAgent extends AbstractAgent {
     public int getIndex() {
         return index;
     }
+
+    /**
+     * Returns a string representation of this component and its values.
+     * @return    a string representation of this component
+     * @since     JDK1.0
+     */
+    @Override
+    public String toString() {
+        return String.format("Pacman{\"%d\" @ %d, %d -> %s}", index, coordinateX,
+            coordinateY, direction.name());
+    }
 }

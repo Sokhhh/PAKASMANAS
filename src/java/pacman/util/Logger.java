@@ -23,6 +23,9 @@ public class Logger {
     /** Prints in green. */
     public static final String ANSI_GREEN = "\u001B[32m";
 
+    /** Prints in purple. */
+    public static final String ANSI_PURPLE = "\u001B[35m";
+
     /** Prints in yello. */
     public static final String ANSI_YELLOW = "\u001B[33m";
 
@@ -135,7 +138,7 @@ public class Logger {
      * @param  format
      *         A format string as described in <a
      *         href="../pacman.util/Formatter.html#syntax">Format string syntax</a>
-     *
+     * @param stack the number of stack need to be printed
      * @param  args
      *         Arguments referenced by the format specifiers in the format
      *         string.  If there are more arguments than format specifiers, the
@@ -156,11 +159,12 @@ public class Logger {
      *          href="../pacman.util/Formatter.html#detail">Details</a> section of the
      *          formatter class specification.
      */
-    public static void printColor(String color, String format, Object ... args)
+    public static void printColor(String color, int stack, String format, Object ... args)
         throws IllegalFormatException {
         if (LOG_ENABLED) {
             if (LOG_DETAIL) {
-                logger.print("[LOG] " + Thread.currentThread().getStackTrace()[2] + ": " + color);
+                logger.print("[LOG] " + Thread.currentThread().getStackTrace()[2 + stack]
+                    + ": " + color);
             }
             logger.printf(format, args);
             logger.println(ANSI_RESET);
