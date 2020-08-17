@@ -25,6 +25,17 @@ public class StringUtilities {
     /**
      * Checks if a string is an integer.
      *
+     * <p>Examples:
+     * <pre>{@code
+     *  StringUtilities.isInteger(null)  = false
+     *  StringUtilities.isInteger("")    = false
+     *  StringUtilities.isInteger("123") = true
+     *  StringUtilities.isInteger("-123") = true
+     *  StringUtilities.isInteger("0123") = true
+     *  StringUtilities.isInteger("0.123") = false
+     *  StringUtilities.isInteger("abc") = false
+     * }</pre>
+     *
      * @param str the string being queried
      * @return {@code true} if the string is an integer
      */

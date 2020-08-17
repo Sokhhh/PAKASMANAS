@@ -13,6 +13,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import pacman.util.StringUtilities;
 
 /**
  * Contains a panel for showing a network address.
@@ -178,9 +179,9 @@ public class NetworkAddressPanel extends JPanel {
      * @param port the port that will be in the input field
      */
     public void setPort(String port) {
-        try {
-            this.portField.setText(String.valueOf(Integer.parseInt(port)));
-        } catch (NumberFormatException e) {
+        if (StringUtilities.isInteger(port)) {
+            this.portField.setText(port);
+        } else {
             this.portField.setText("");
         }
     }

@@ -60,11 +60,14 @@ import pacman.agents.GhostAgent;
 import pacman.agents.KeyboardControlledAgent;
 import pacman.agents.MazePanel;
 import pacman.agents.PacmanAgent;
+import pacman.agents.UserControlledGhostAgent;
+import pacman.agents.UserControlledPacmanAgent;
 import pacman.algorithms.AbstractAlgorithm;
 import pacman.algorithms.NullAlgorithm;
 import pacman.controller.FakeMazeController;
 import pacman.controller.PacmanController;
 import pacman.model.Coordinate;
+import pacman.model.Direction;
 import pacman.model.Maze;
 import pacman.network.SimpleP2PServer;
 import pacman.util.ImageInterning;
@@ -118,6 +121,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * Contains a list of all choices of agents available in the maze.
      */
     private List<AgentItemPanel> agentItemPanels;
+    private JLabel selectPlayerLabel;
 
     /**
      * Constructor.
@@ -502,7 +506,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
 
         // Local address
         JLabel serverLabel = ComponentFactory.createLabel(
-                "You are listening for connections on:", true, 20);
+                "Server is closed.", true, 20);
         serverLabel.setForeground(PacmanTheme.WELCOME_TEXT);
 
         final Box localLabel = (Box) ComponentFactory.wrapInLeftAlign(serverLabel);
@@ -532,10 +536,18 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.localAddressPanel = new NetworkAddressPanel(false);
         this.localAddressPanel.setForeground(PacmanTheme.WELCOME_TEXT);
         this.localAddressPanel.setBackground(PacmanTheme.WELCOME_BACKGROUND);
-        this.localAddressPanel.setApplyBtnText("Change port");
+        this.localAddressPanel.setApplyBtnText("Start/stop server");
+        this.localAddressPanel.setToolTipText(StringUtilities.makeHTML("Start the server with "
+            + "specified port number, <br> input 0 if you want a random port."));
         this.localAddressPanel.setApplyBtnAction(e -> {
-            if (!controller.changePort(localAddressPanel.getPort(), true)) {
-                localAddressPanel.setPort(controller.getLocalPort());
+            if (controller.isServerStarted()) {
+                controller.closeServer();
+                serverLabel.setText("Server is closed.");
+            } else {
+                if (controller.changePort(localAddressPanel.getPort(), true)) {
+                    localAddressPanel.setPort(controller.getLocalPort());
+                    serverLabel.setText("Listening for connections on:");
+                }
             }
         });
         this.localAddressPanel.setPort(controller.getLocalPort());
@@ -555,6 +567,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
                     || ask("Joining others will disconnect with all existing connections."
                     + "Are you sure?")) {
                 connectTo();
+                serverLabel.setText("Server is closed.");
             }
         });
         this.remoteAddressPanel.setApplyBtnText("Join");
@@ -579,7 +592,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         clientListPanel.setOpaque(false);
         clientListPanel.setLayout(new BoxLayout(clientListPanel, BoxLayout.Y_AXIS));
 
-        setUpClientListPanel();
+        updateClientListPanel();
 
         networkPanel.add(clientListPanel);
         networkPanel.add(Box.createVerticalStrut(15));
@@ -599,6 +612,10 @@ public class GUIViewer extends JFrame implements UserInteraction {
         JButton loadMapButton = new JButton("  Load map  ");
         PacmanViewUtility.addMouseHoveringEffectAtStart(loadMapButton);
         loadMapButton.addActionListener(e -> {
+            if (controller.isClientNode()) {
+                notification("You are not the host. You cannot change map settings.");
+                return;
+            }
             controller.advancedLoad((String) levelChoicesComboBoxs.get(1).getSelectedItem(),
                     customInputFileTextFields.get(1).getText());
         });
@@ -607,7 +624,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         levelPanel.add(Box.createVerticalStrut(15));
         levelPanel.add(new JSeparator());
         levelPanel.add(Box.createVerticalStrut(5));
-        JLabel selectPlayerLabel = ComponentFactory.createLabel(
+        selectPlayerLabel = ComponentFactory.createLabel(
                 "Select player:", true, 20);
         selectPlayerLabel.setForeground(PacmanTheme.WELCOME_TEXT);
         levelPanel.add(GuiComponentFactory.wrapInEquallyDividedPanel(selectPlayerLabel));
@@ -641,13 +658,17 @@ public class GUIViewer extends JFrame implements UserInteraction {
         playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS));
 
         players = new ArrayList<>();
-        setUpPlayerListPanel(null);
+        setUpPlayerListPanel(null, null);
 
         levelPanel.add(playerPanel);
         levelPanel.add(Box.createVerticalStrut(15));
         JButton startGameButton = new JButton("Start Game");
         PacmanViewUtility.addMouseHoveringEffectAtStart(startGameButton);
         startGameButton.addActionListener(e -> {
+            if (controller.isClientNode()) {
+                notification("Only the host can start the game");
+                return;
+            }
             String selectedName = getSelectedName();
             controller.advancedStart(selectedName, agentItemPanels);
         });
@@ -666,7 +687,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
     /**
      * Adds the list of client to the panel showing the clients.
      */
-    private void setUpClientListPanel() {
+    private void updateClientListPanel() {
         clientListPanel.removeAll();
         Set<SocketAddress> clientAddresses = controller.getClientList();
         if (clientAddresses.isEmpty()) {
@@ -691,43 +712,68 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * Sets up the panel that can be used to choose which agent to be controlled
      * in the game.
      *
+     * @param mazeName the name of the maze
      * @param maze the the maze of the game
      */
-    public void setUpPlayerListPanel(Maze maze) {
+    public void setUpPlayerListPanel(String mazeName, Maze maze) {
         players.clear();
         advancedPlayerSelectionName.clear();
+        agentItemPanels.clear();
         playerPanel.removeAll();
 
         advancedPlayerSelectionGroup = new ButtonGroup();
         if (maze != null) {
+            levelChoicesComboBoxs.get(1).setSelectedItem(mazeName);
+            selectPlayerLabel.setText("Select player for \"" + mazeName + "\":");
             for (int i = 0; i < Math.min(maze.getPacmanStartLocation().length,
-                    PacmanAgent.NAMES.length); i++) {
+                PacmanAgent.NAMES.length); i++) {
                 JRadioButton selectAgentButton = new JRadioButton();
                 advancedPlayerSelectionGroup.add(selectAgentButton);
                 advancedPlayerSelectionName.put(selectAgentButton,
-                        PacmanAgent.NAMES[i]);
+                    PacmanAgent.NAMES[i]);
                 AgentItemPanel agentPanel =
-                        new AgentItemPanel(PacmanAgent.NAMES[i], selectAgentButton);
+                    new AgentItemPanel(PacmanAgent.NAMES[i], selectAgentButton);
+                agentPanel.addComboBoxActionListener(e -> {
+                    if (controller.isClientNode()) {
+                        notification(StringUtilities.makeHTML("Please setting the algorithm "
+                            + "at the non-host side has no effect."));
+                    }
+                });
                 playerPanel.add(agentPanel);
                 agentItemPanels.add(agentPanel);
             }
             for (int i = 0; i < Math.min(maze.getGhostsStartLocation().length,
-                    GhostAgent.NAMES.length); i++) {
+                GhostAgent.NAMES.length); i++) {
                 JRadioButton selectAgentButton = new JRadioButton();
                 advancedPlayerSelectionGroup.add(selectAgentButton);
                 advancedPlayerSelectionName.put(selectAgentButton, GhostAgent.NAMES[i]);
                 AgentItemPanel agentPanel =
-                        new AgentItemPanel(GhostAgent.NAMES[i],
-                                selectAgentButton);
+                    new AgentItemPanel(GhostAgent.NAMES[i], selectAgentButton);
+                agentPanel.addComboBoxActionListener(e -> {
+                    if (controller.isClientNode()) {
+                        notification(StringUtilities.makeHTML("Please setting the algorithm "
+                            + "at the non-host side has no effect"));
+                    }
+                });
                 playerPanel.add(agentPanel);
                 agentItemPanels.add(agentPanel);
             }
         } else {
+            selectPlayerLabel.setText("Select player:");
             JLabel selectPlayerLabel = ComponentFactory.createLabel(
-                    "You haven't load a map", false, 20);
+                "You haven't load a map", false, 20);
             selectPlayerLabel.setHorizontalAlignment(SwingConstants.CENTER);
             selectPlayerLabel.setForeground(PacmanTheme.WELCOME_TEXT);
-            playerPanel.add(GuiComponentFactory.wrapInEquallyDividedPanel(selectPlayerLabel));
+            playerPanel
+                .add(GuiComponentFactory.wrapInEquallyDividedPanel(selectPlayerLabel));
+        }
+
+        for (AgentItemPanel agentPanel: agentItemPanels) {
+            agentPanel.addCheckBoxActionListener(e -> {
+                Logger.printlnf("Selected \"%s\"", agentPanel.getAgentName());
+                controller.userSelected(agentPanel.getAgentName());
+                controller.sendAgentSelection(agentPanel.getAgentName());
+            });
         }
 
         playerPanel.revalidate();
@@ -753,11 +799,14 @@ public class GUIViewer extends JFrame implements UserInteraction {
     }
 
     /**
-     * Shows the advanced settings interface.
+     * Shows the advanced settings interface. The interface is constructed in
+     * {@link #setUpAdvancedStart()}.
      *
      * @requires No connection established before
+     * @param mazeName the name of the maze
+     * @param maze the the maze of the game
      */
-    public void showAdvancedPanel() {
+    public void showAdvancedPanel(final String mazeName, final Maze maze) {
         this.localAddressPanel.setPort(controller.getLocalPort());
         // Default address
         try {
@@ -869,13 +918,16 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @param index the index of the pacman
      * @param algorithm the algorithm chosen for determining next move
      * @param isSelf if the agent is controlled by the local host user
+     * @param isNetwork if the agent is controlled by the network side
      */
     public void addPacman(final Maze maze, final int x, final int y, int index,
-                   AbstractAlgorithm algorithm, boolean isSelf) {
+                   AbstractAlgorithm algorithm, boolean isSelf, boolean isNetwork) {
         PacmanAgent agent;
         if (isSelf) {
+            agent = new UserControlledPacmanAgent(controller, maze, x, y, index, algorithm);
+            self = (UserControlledPacmanAgent) agent;
+        } else if (isNetwork) {
             agent = new ControlledPacmanAgent(controller, maze, x, y, index, algorithm);
-            self = (ControlledPacmanAgent) agent;
         } else {
             agent = new PacmanAgent(controller, maze, x, y, index, algorithm);
         }
@@ -892,14 +944,17 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @param name the name of the ghost agent
      * @param algorithm the algorithm chosen for determining next move
      * @param isSelf if the agent is controlled by the local host user
+     * @param isNetwork if the agent is controlled by the network side
      */
     public void addGhost(final Maze maze, final int x, final int y, String name,
-                         AbstractAlgorithm algorithm, boolean isSelf) {
+                         AbstractAlgorithm algorithm, boolean isSelf, boolean isNetwork) {
         GhostAgent agent;
 
         if (isSelf) {
+            agent = new UserControlledGhostAgent(controller, maze, x, y, name, algorithm);
+            self = (UserControlledGhostAgent) agent;
+        } else if (isNetwork) {
             agent = new ControlledGhostAgent(controller, maze, x, y, name, algorithm);
-            self = (KeyboardControlledAgent) agent;
         } else {
             agent = new GhostAgent(controller, maze, x, y, name, algorithm);
         }
@@ -931,7 +986,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         MazePanel mazePanel = new MazePanel(maze);
         int i = 0;
         for (Coordinate coordinate: maze.getPacmanStartLocation()) {
-            mazePanel.addAgent(new ControlledPacmanAgent(new FakeMazeController(),
+            mazePanel.addAgent(new UserControlledPacmanAgent(new FakeMazeController(),
                     maze, coordinate.getX(), coordinate.getY(), i,
                     new NullAlgorithm(maze)), false);
             i++;
@@ -1090,9 +1145,9 @@ public class GUIViewer extends JFrame implements UserInteraction {
             address = address.split("/")[1];
         }
         this.remoteAddressPanel.setAddress(address);
-        this.localAddressPanel.setApplyBtnEnabled(false);
         this.remoteAddressPanel.setApplyBtnEnabled(false);
         this.networkStatusPanel.connected();
+        this.updateClientListPanel();
     }
 
     /**
@@ -1102,7 +1157,6 @@ public class GUIViewer extends JFrame implements UserInteraction {
         boolean result = this.controller.connectTo(this.remoteAddressPanel.getAddress(),
                 this.remoteAddressPanel.getPort(), false);
         if (result) {
-            this.localAddressPanel.setApplyBtnEnabled(false);
             this.remoteAddressPanel.setApplyBtnEnabled(false);
             this.networkStatusPanel.connected();
         }
@@ -1118,7 +1172,6 @@ public class GUIViewer extends JFrame implements UserInteraction {
     public void updateConnectTo(String address, int port) {
         this.remoteAddressPanel.setAddress(address);
         this.remoteAddressPanel.setPort(port);
-        this.localAddressPanel.setApplyBtnEnabled(false);
         this.remoteAddressPanel.setApplyBtnEnabled(false);
         this.networkStatusPanel.connected();
     }
@@ -1127,7 +1180,6 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * This method gets called when the remote side closes the connection.
      */
     public void remoteConnectionClosed() {
-        this.localAddressPanel.setApplyBtnEnabled(true);
         this.remoteAddressPanel.setApplyBtnEnabled(true);
         this.networkStatusPanel.waitForConnection();
     }
@@ -1155,5 +1207,53 @@ public class GUIViewer extends JFrame implements UserInteraction {
      */
     public List<AgentItemPanel> getAgentItemPanels() {
         return agentItemPanels;
+    }
+
+    /**
+     * Unselects the player choice.
+     * @param token the name of the agent
+     */
+    public void unselectPlayer(final String token) {
+        advancedPlayerSelectionGroup.clearSelection();
+    }
+
+    /**
+     * Change the current moving direction of an agent immediately.
+     *
+     * @param direction the new direction
+     * @param x the new x coordinate
+     * @param y the new y coordinate
+     * @param agentName the name of the agent
+     */
+    public void immediateDirectionChange(final String direction, final String x,
+        final String y, final String agentName) {
+        Logger.printlnf("Immediate direction change at (%s, %s) to %s for %s", x, y,
+            direction, agentName);
+        Direction d = Direction.valueOf(direction);
+        AbstractAgent agent;
+        if (StringUtilities.isInteger(agentName)) {
+            agent = pacmanAgents.get(Integer.parseInt(agentName));
+        } else {
+            agent = ghostAgents.get(agentName);
+        }
+        agent.networkChangeDirection(d, x, y);
+    }
+
+    /**
+     * Change the current location of an agent immediately.
+     *
+     * @param x the new x coordinate
+     * @param y the new y coordinate
+     * @param agentName the name of the agent
+     */
+    public void immediateLocationChange(final String x, final String y,
+        final String agentName) {
+        AbstractAgent agent;
+        if (StringUtilities.isInteger(agentName)) {
+            agent = pacmanAgents.get(Integer.parseInt(agentName));
+        } else {
+            agent = ghostAgents.get(agentName);
+        }
+        agent.networkChangeLocation(x, y);
     }
 }

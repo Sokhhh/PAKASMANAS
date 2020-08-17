@@ -1,6 +1,7 @@
 package pacman.controller;
 
 import pacman.agents.AbstractAgent;
+import pacman.model.Direction;
 
 /**
  * Contains a fake controller which does nothing in every action, mainly for
@@ -9,21 +10,6 @@ import pacman.agents.AbstractAgent;
  * @version 1.0
  */
 public class FakeMazeController implements PacmanMazeController {
-    /**
-     * Adds the pacman to the maze and to the view.
-     */
-    @Override
-    public void addPacman() {
-        // Ignored
-    }
-
-    /**
-     * Adds the ghosts to the maze and to the view.
-     */
-    @Override
-    public void addGhosts() {
-        // Ignored
-    }
 
     /**
      * Gets called when an agent (pacman/ghost) visits a block. It checks if the
@@ -49,5 +35,29 @@ public class FakeMazeController implements PacmanMazeController {
     @Override
     public void removeAgent(AbstractAgent agent) {
         // Ignored
+    }
+
+    /**
+     * Notifies the direction change (actions) of an agent.
+     *
+     * @param d     the new direction of the agent
+     * @param agent the agent that is changing
+     */
+    @Override
+    public void notifyDirectionChange(final Direction d, final AbstractAgent agent,
+        int x, int y) {
+        // Ignored
+    }
+
+    /**
+     * Notifies the location change (actions) of an agent.
+     *
+     * @param x the x coordinate in the maze
+     * @param y the y coordinate in the maze
+     * @param agent the agent that is changing
+     */
+    @Override
+    public void notifyLocationChange(final int x, final int y, final AbstractAgent agent) {
+
     }
 }

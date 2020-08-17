@@ -91,6 +91,8 @@ public abstract class AbstractAgent extends JLabel {
      * Contains the algorithm chosen for determining next move.
      */
     protected final AbstractAlgorithm algorithm;
+    private java.util.Timer hold;
+
 
     /**
      * Contains an Action object that applied when the user inputs a new direction. It
@@ -216,7 +218,7 @@ public abstract class AbstractAgent extends JLabel {
         pendingDirections.clear();
         direction = Direction.STOP;
         setVisible(false);
-        java.util.Timer hold = new java.util.Timer();
+        hold = new java.util.Timer();
         hold.scheduleAtFixedRate(new TimerTask() {
             /**
              * The action to be performed by this timer task.
@@ -230,6 +232,8 @@ public abstract class AbstractAgent extends JLabel {
                     coordinateX = curr.getX();
                     coordinateY = curr.getY();
                     setMazeLocation(coordinateX, coordinateY);
+                    controller.notifyLocationChange(coordinateX, coordinateY,
+                        AbstractAgent.this);
                     setVisible(true);
                     controller.agentVisit(AbstractAgent.this, coordinateX, coordinateY);
                     autoMoving.start();
@@ -340,5 +344,40 @@ public abstract class AbstractAgent extends JLabel {
     protected void changeDirection(Direction d) {
         direction = d;
         directionChanged = true;
+        controller.notifyDirectionChange(d, this, coordinateX, coordinateY);
+    }
+
+    /**
+     * Change the current moving direction immediately.
+     *
+     * @param d the new direction
+     * @param x the new x coordinate
+     * @param y the new y coordinate
+     */
+    public void networkChangeDirection(Direction d, String x, String y) {
+        if (animation != null) {
+            animation.stop();
+        }
+        setMazeLocation(Integer.parseInt(x), Integer.parseInt(y));
+        direction = d;
+        directionChanged = true;
+    }
+
+    /**
+     * Change the current location of an agent immediately.
+     *
+     * @param x the new x coordinate
+     * @param y the new y coordinate
+     */
+    public void networkChangeLocation(final String x, final String y) {
+        if (hold != null) {
+            hold.cancel();
+        }
+        setMazeLocation(Integer.parseInt(x), Integer.parseInt(y));
+        setVisible(true);
+        if (hold != null) {
+            controller.agentVisit(AbstractAgent.this, coordinateX, coordinateY);
+            autoMoving.start();
+        }
     }
 }

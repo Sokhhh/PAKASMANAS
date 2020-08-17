@@ -21,6 +21,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import pacman.controller.NetworkController;
 import pacman.util.Logger;
 
@@ -39,7 +40,8 @@ public class SimpleP2PServer {
     /**
      * Contains a task queue to finish different task in the application.
      */
-    private final ExecutorService exec;
+    private ExecutorService inputExecutor;
+    private final ExecutorService outputExecutor;
 
     /**
      * Contains the local server socket that will waits for connection.
@@ -51,6 +53,16 @@ public class SimpleP2PServer {
      * remote side.
      */
     private final HashMap<SocketAddress, Socket> connectionSockets;
+
+    /**
+     * Contains the maximum number of client in this server.
+     */
+    private int maxConnections;
+
+    /**
+     * Contains the status of the local server.
+     */
+    private final AtomicBoolean isListening;
 
     /**
      * Contains the tags for network messages.
@@ -74,8 +86,27 @@ public class SimpleP2PServer {
      */
     public SimpleP2PServer(NetworkController controller) throws IOException,
         SecurityException {
+        this(controller, Short.MAX_VALUE);
+    }
+
+    /**
+     * Constructor that establishes the server by checking an available port
+     * automatically.
+     *
+     * @param controller the controller of this application
+     * @param maxClientNum the maximum number of clients
+     * @throws   IOException  if an I/O error occurs when opening the socket.
+     * @throws   SecurityException
+     *      if a security manager exists and its {@code checkListen}
+     *      method doesn't allow the operation.
+     */
+    public SimpleP2PServer(NetworkController controller, int maxClientNum) throws IOException,
+        SecurityException {
         this.controller = controller;
-        this.exec = Executors.newCachedThreadPool();
+        this.maxConnections = maxClientNum;
+        this.isListening = new AtomicBoolean(false);
+        this.inputExecutor = Executors.newCachedThreadPool();
+        this.outputExecutor = Executors.newCachedThreadPool();
         this.connectionSockets = new HashMap<>();
     }
 
@@ -158,6 +189,17 @@ public class SimpleP2PServer {
     // ==================================================================================
 
     /**
+     * This method changes the number of maximum allowed connections. If there is
+     * already more connections, those connections won't be closed, but no more
+     * connections are allowed.
+     *
+     * @param maxConnections the maximum number of connections
+     */
+    public void setMaxConnections(int maxConnections) {
+        this.maxConnections = maxConnections;
+    }
+
+    /**
      * This method reestablishes the server by using a system allocated port number.
      *
      * @throws   IOException  if an I/O error occurs when opening the socket.
@@ -190,11 +232,19 @@ public class SimpleP2PServer {
         if (this.serverSocket != null) {
             this.serverSocket.close();
         }
+        this.isListening.set(true);
         this.serverSocket = new ServerSocket(port);
-        this.exec.submit(() -> {
+        this.inputExecutor.submit(() -> {
             try {
                 listen();
             } catch (IOException | SecurityException e) {
+                if (serverSocket != null) {
+                    try {
+                        serverSocket.close();
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
                 e.printStackTrace();
             }
         });
@@ -213,6 +263,16 @@ public class SimpleP2PServer {
     }
 
     /**
+     * This method gets the status of the local server.
+     *
+     * @return {@code true} if local server is listening to connections and {@code
+     *       false} otherwise
+     */
+    public boolean isListening() {
+        return isListening.get();
+    }
+
+    /**
      * This method let the server blocks and listens to an incoming connection.
      *
      * @throws   IOException  if an I/O error occurs when waiting for a
@@ -226,8 +286,7 @@ public class SimpleP2PServer {
             throw new SocketException("Socket is closed");
         }
 
-        System.out
-            .println("Waiting for connection on " + getLocalIP() + ":" + getLocalPort());
+        Logger.println("Waiting for connection on " + getLocalIP() + ":" + getLocalPort());
 
         while (true) {
             Socket newConnectionSocket;
@@ -240,10 +299,24 @@ public class SimpleP2PServer {
             // client accepted
             Logger.printlnf("Receive connection on %s",
                     newConnectionSocket.getRemoteSocketAddress());
-            this.controller.incomingConnection(newConnectionSocket.getRemoteSocketAddress(),
-                    newConnectionSocket.getPort());
-            this.exec.submit(() -> acceptMessage(newConnectionSocket));
+            if (connectionSockets.size() + 1 > maxConnections || !isListening.get()) {
+                newConnectionSocket.close();
+                continue;
+            }
+            this.connectionSockets.put(newConnectionSocket.getRemoteSocketAddress(),
+                newConnectionSocket);
+            if (this.controller.incomingConnection(newConnectionSocket.getRemoteSocketAddress(),
+                    newConnectionSocket.getPort())) {
+                this.outputExecutor.submit(() -> acceptMessage(newConnectionSocket));
+            }
         }
+    }
+
+    /**
+     * Closes the server.
+     */
+    public void closeServer() {
+        this.isListening.set(false);
     }
 
     /**
@@ -288,6 +361,7 @@ public class SimpleP2PServer {
      *
      * @param address the address of the remote host
      * @param port the port of the remote host
+     * @return the address of the remote side
      * @throws     UnknownHostException if the IP address of
      *      the host could not be determined.
      * @throws     IOException  if an I/O error occurs when creating the socket.
@@ -298,7 +372,7 @@ public class SimpleP2PServer {
      *             0 and 65535, inclusive. or if the address is same as the address of
      *             the local host
      */
-    public void connectTo(String address, int port) throws UnknownHostException,
+    public SocketAddress connectTo(String address, int port) throws UnknownHostException,
             IOException, SecurityException, IllegalArgumentException {
         InetAddress addr = InetAddress.getByName(address);
         if ((addr.isAnyLocalAddress() || addr.isLoopbackAddress()) && port == getLocalPort()) {
@@ -306,7 +380,11 @@ public class SimpleP2PServer {
                 + "application instance.");
         }
         Socket outgoingSocket = new Socket(address, port);
-        this.exec.submit(() -> acceptMessage(outgoingSocket));
+        Logger.printlnf("Connect to %s", outgoingSocket.getRemoteSocketAddress());
+        this.connectionSockets.put(outgoingSocket.getRemoteSocketAddress(),
+            outgoingSocket);
+        this.outputExecutor.submit(() -> acceptMessage(outgoingSocket));
+        return outgoingSocket.getRemoteSocketAddress();
     }
 
     /**
@@ -317,6 +395,7 @@ public class SimpleP2PServer {
      */
     public void closeConnection(SocketAddress remoteSocketAddress) throws IOException {
         if (this.connectionSockets.containsKey(remoteSocketAddress)) {
+            Logger.printlnf("Close connect with %s", remoteSocketAddress);
             this.connectionSockets.get(remoteSocketAddress).close();
         }
         this.connectionSockets.remove(remoteSocketAddress);
@@ -363,7 +442,6 @@ public class SimpleP2PServer {
             // failed
             return;
         }
-        this.connectionSockets.put(client.getRemoteSocketAddress(), client);
 
         String line = "";
 
@@ -371,11 +449,15 @@ public class SimpleP2PServer {
         while (!line.equals("CLOSE")) {
             try {
                 line = in.readUTF();
-                Logger.printlnf("%s -> %s: %s", client.getRemoteSocketAddress(),
-                        getLocalIP(), line);
-                this.controller.receiveRemoteMessage(line);
+                Logger.printColor(Logger.ANSI_GREEN, "%s -> local: %s",
+                    client.getRemoteSocketAddress(), line);
+                controller.receiveRemoteMessage(client.getRemoteSocketAddress(),
+                    line);
+            } catch (RuntimeException e) {
+                e.printStackTrace();
             } catch (IOException i) {
                 // Remote closed
+                Logger.printlnf("%s closed", client.getRemoteSocketAddress());
                 if (!client.isClosed()) {
                     this.remoteCloseConnection(client);
                 }
@@ -394,13 +476,14 @@ public class SimpleP2PServer {
      */
     public void send(SocketAddress target, String message) throws IOException {
         if (this.connectionSockets.get(target) == null) {
-            System.err
-                .println("Cannot send message \"" + message + "\" without connection.");
+            Logger.println("Cannot send message \"" + message + "\" without connection.");
             return;
         }
         DataOutputStream out = new DataOutputStream(
             this.connectionSockets.get(target).getOutputStream());
         out.writeUTF(message);
+        Logger.printColor(Logger.ANSI_YELLOW, "local -> %s: %s",
+            connectionSockets.get(target).getRemoteSocketAddress(), message);
     }
 
     /**
@@ -412,13 +495,11 @@ public class SimpleP2PServer {
      */
     public void broadcast(String message) throws IOException {
         if (this.connectionSockets.isEmpty()) {
-            System.err
-                .println("Cannot send message \"" + message + "\" without connection.");
+            Logger.println("Cannot send message \"" + message + "\" without connection.");
             return;
         }
         for (Socket client: this.connectionSockets.values()) {
-            DataOutputStream out = new DataOutputStream(client.getOutputStream());
-            out.writeUTF(message);
+            send(client.getRemoteSocketAddress(), message);
         }
     }
 }

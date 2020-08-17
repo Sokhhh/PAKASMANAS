@@ -21,6 +21,20 @@ public interface NetworkController {
     int getLocalPort();
 
     /**
+     * This method gets the status of the local server.
+     *
+     * @return {@code true} if local server is started and {@code false} otherwise
+     */
+    boolean isServerStarted();
+
+    /**
+     * This method checks if any connection (server/client) is connected with local host.
+     *
+     * @return {@code true} if connected and {@code false} otherwise
+     */
+    boolean isConnected();
+
+    /**
      * This method changes the port number of the local host and reset the server.
      *
      * @param port the local port of the host
@@ -37,6 +51,11 @@ public interface NetworkController {
      * @return if the user accepts the connection
      */
     boolean incomingConnection(final SocketAddress remoteSocketAddress, int port);
+
+    /**
+     * This method closes the server.
+     */
+    void closeServer();
 
     /**
      * This function let the server connect to a remote host on its own initiative.
@@ -64,9 +83,10 @@ public interface NetworkController {
     /**
      * This method gets called when the remote side sends a message.
      *
+     * @param from who sent this message
      * @param message the message content
      */
-    void receiveRemoteMessage(String message);
+    void receiveRemoteMessage(SocketAddress from, String message);
 
     /**
      * This method gets the list of connected clients.
@@ -74,4 +94,5 @@ public interface NetworkController {
      * @return a set containing the addresses of all connected clients
      */
     Set<SocketAddress> getClientList();
+
 }

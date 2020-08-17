@@ -1,6 +1,7 @@
 package pacman.controller;
 
 import pacman.agents.AbstractAgent;
+import pacman.model.Direction;
 
 /**
  * This is the controller of the program. It accepts input and converts it to
@@ -9,16 +10,6 @@ import pacman.agents.AbstractAgent;
  * @version 1.0
  */
 public interface PacmanMazeController {
-    /**
-     * Adds the pacman to the maze and to the view.
-     */
-    void addPacman();
-
-    /**
-     * Adds the ghosts to the maze and to the view.
-     */
-    void addGhosts();
-
     /**
      * Gets called when an agent (pacman/ghost) visits a block. It checks if the
      * pacman meets a food (then earn scores), pellet (then earn scores and enter
@@ -38,4 +29,23 @@ public interface PacmanMazeController {
      * @param agent the agent that is about to be removed.
      */
     void removeAgent(AbstractAgent agent);
+
+    /**
+     * Notifies the direction change (actions) of an agent.
+     *
+     * @param d the new direction of the agent
+     * @param agent the agent that is changing
+     * @param x the x coordinate in the maze
+     * @param y the y coordinate in the maze
+     */
+    void notifyDirectionChange(Direction d, AbstractAgent agent, int x, int y);
+
+    /**
+     * Notifies the location change (actions) of an agent.
+     *
+     * @param x the x coordinate in the maze
+     * @param y the y coordinate in the maze
+     * @param agent the agent that is changing
+     */
+    void notifyLocationChange(int x, int y, AbstractAgent agent);
 }

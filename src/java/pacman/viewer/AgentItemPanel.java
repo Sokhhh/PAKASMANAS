@@ -114,6 +114,19 @@ public class AgentItemPanel extends JPanel {
     }
 
     /**
+     * Adds an <code>ActionListener</code> to the algorithm checkbox..
+     *
+     * <p>The <code>ActionListener</code> will receive an <code>ActionEvent</code>
+     * when a selection has been made. If the combo box is editable, then
+     * an <code>ActionEvent</code> will be fired when editing has stopped.
+     *
+     * @param l  the <code>ActionListener</code> that is to be notified
+     */
+    public void addComboBoxActionListener(ActionListener l) {
+        this.algorithmChoices.addActionListener(l);
+    }
+
+    /**
      * Gets the state of the button. True if the
      * toggle button is selected, false if it's not.
      *

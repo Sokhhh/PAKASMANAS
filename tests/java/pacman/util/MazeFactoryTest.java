@@ -17,7 +17,7 @@ public class MazeFactoryTest {
         MazePanel mazePanel = new MazePanel(maze);
         int i = 0;
         for (Coordinate coordinate: maze.getPacmanStartLocation()) {
-            mazePanel.addAgent(new ControlledPacmanAgent(new FakeMazeController(),
+            mazePanel.addAgent(new UserControlledPacmanAgent(new FakeMazeController(),
                     maze, coordinate.getX(), coordinate.getY(), i,
                     new NullAlgorithm(maze)), false);
             i++;

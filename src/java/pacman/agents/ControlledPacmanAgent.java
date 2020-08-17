@@ -14,7 +14,8 @@ import pacman.model.Maze;
  * @version 1.0
  */
 public class ControlledPacmanAgent extends PacmanAgent implements KeyboardControlledAgent {
-    private boolean aiTakeOver = false;
+    /** Defines if ai is controlling the agent. */
+    protected boolean aiTakeOver = false;
 
     /**
      * Constructor that creates a new PacmanAgent.
@@ -31,7 +32,6 @@ public class ControlledPacmanAgent extends PacmanAgent implements KeyboardContro
                                  final int startCoordinateY, final int index,
                                  AbstractAlgorithm algorithm) {
         super(controller, maze, startCoordinateX, startCoordinateY, index, algorithm);
-        this.setArrowKeyToControl(this);
     }
 
     /**
@@ -75,10 +75,8 @@ public class ControlledPacmanAgent extends PacmanAgent implements KeyboardContro
     public boolean aiTakeOver() {
         if (!aiTakeOver) {
             aiTakeOver = true;
-            disableArrowKeyToControl(this);
         } else {
             aiTakeOver = false;
-            setArrowKeyToControl(this);
         }
         return aiTakeOver;
     }
