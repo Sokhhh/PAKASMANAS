@@ -1,8 +1,8 @@
 package pacman.util;
 
 /**
- * Contains operations on {@link String} that jdk does not provide. Operations in
- * this class is null safe.
+ * Contains operations on {@link String} that jdk 8 does not provide. Operations in
+ * this class are null safe.
  *
  * @version 1.0
  */
@@ -18,8 +18,8 @@ public class StringUtilities {
         if (str == null) {
             return null;
         }
-        return "<html>" + str.replaceAll(System.lineSeparator(), "<br>").replaceAll("\n", "<br>")
-                + "</html>";
+        return "<html>" + str.replaceAll(System.lineSeparator(), "<br>")
+            .replaceAll("\n", "<br>") + "</html>";
     }
 
     /**

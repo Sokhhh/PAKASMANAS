@@ -1116,6 +1116,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
      * @param win if the user wins
      */
     public void gameOver(boolean win) {
+        this.view.stopMoving();
         Logger.printlnf("Game over");
         this.view.gameOver(win);
         int choice = this.view.showResultDialog(win);

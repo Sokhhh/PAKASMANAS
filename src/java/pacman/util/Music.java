@@ -42,7 +42,7 @@ public class Music {
      * @see #stop()
      */
     public boolean isRunning() {
-        return !clip.isRunning();
+        return clip.isRunning();
     }
 
     /**

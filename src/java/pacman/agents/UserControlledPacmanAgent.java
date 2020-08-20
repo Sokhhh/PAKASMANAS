@@ -39,7 +39,7 @@ public class UserControlledPacmanAgent extends ControlledPacmanAgent {
     @Override
     public boolean aiTakeOver() {
         super.aiTakeOver();
-        if (!aiTakeOver) {
+        if (aiTakeOver) {
             disableArrowKeyToControl(this);
         } else {
             setArrowKeyToControl(this);

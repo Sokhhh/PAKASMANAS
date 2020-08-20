@@ -41,7 +41,11 @@ public class SimpleP2PServer {
     /**
      * Contains a task queue to finish different task in the application.
      */
-    private ExecutorService inputExecutor;
+    private final ExecutorService inputExecutor;
+
+    /**
+     * Contains a task queue to finish different task in the application.
+     */
     private final ExecutorService outputExecutor;
 
     /**

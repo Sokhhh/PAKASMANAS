@@ -87,6 +87,9 @@ public class GUIViewer extends JFrame implements UserInteraction {
     /** Contains the controller of the application. */
     private final PacmanController controller;
 
+    /** Contains the settings of the application. */
+    private final Preferences settings;
+
     /**
      * Contains a GUI utility that can be used to handle communication with the user.
      */
@@ -112,10 +115,21 @@ public class GUIViewer extends JFrame implements UserInteraction {
      */
     private JLabel lifeText;
 
+    /**
+     * Contains all pacman agents component in the game.
+     */
     private final LinkedHashMap<Integer, PacmanAgent> pacmanAgents;
+
+    /**
+     * Contains all ghost agents component in the game.
+     */
     private final LinkedHashMap<String, GhostAgent> ghostAgents;
+
+    /**
+     * Contains the agent that the user is controlling.
+     */
     private KeyboardControlledAgent self;
-    private final Preferences settings;
+
     private List<JComboBox<String>> levelChoicesComboBoxes;
     private List<JTextField> customInputFileTextFields;
 
@@ -127,19 +141,38 @@ public class GUIViewer extends JFrame implements UserInteraction {
 
     /** Contains a panel showing the network connection status. */
     private NetworkStatusPanel networkStatusPanel;
+
     private JPanel startupContentPane;
     private JPanel networkSelectorContentPane;
     private JPanel clientListPanel;
+
+    /**
+     * Contains a panel that you can choose which player you want to control.
+     */
     private JPanel playerPanel;
+
+    /**
+     * Contains a panel that you can choose which player you want to control.
+     */
     private JPanel levelPanel;
-    private List<AgentItemPanel> players;
-    private ButtonGroup advancedPlayerSelectionGroup;
-    private final Map<JRadioButton, String> advancedPlayerSelectionName;
+
+    /** Contains a label to tell the user to choose an agent. */
+    private JLabel selectPlayerLabel;
+
+    /**
+     * Contains a button group that can choose which agent to control in the game.
+     */
+    private ButtonGroup agentSelectionGroup;
+
+    /**
+     * Contains all buttons to select an agent.
+     */
+    private final Map<JRadioButton, String> agentSelectionButtons;
+
     /**
      * Contains a list of all choices of agents available in the maze.
      */
-    private LinkedHashMap<String, AgentItemPanel> agentItemPanels;
-    private JLabel selectPlayerLabel;
+    private final LinkedHashMap<String, AgentItemPanel> agentItemPanels;
 
     /**
      * Constructor.
@@ -153,7 +186,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.controller = controller;
         this.pacmanAgents = new LinkedHashMap<>();
         this.ghostAgents = new LinkedHashMap<>();
-        this.advancedPlayerSelectionName = new HashMap<>();
+        this.agentSelectionButtons = new HashMap<>();
         this.agentItemPanels = new LinkedHashMap<>();
 
         addWindowListener(new WindowAdapter() {
@@ -674,7 +707,6 @@ public class GUIViewer extends JFrame implements UserInteraction {
         playerPanel.setOpaque(false);
         playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS));
 
-        players = new ArrayList<>();
         setUpPlayerListPanel(null, null);
 
         levelPanel.add(playerPanel);
@@ -733,20 +765,19 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @param maze the the maze of the game
      */
     public void setUpPlayerListPanel(String mazeName, Maze maze) {
-        players.clear();
-        advancedPlayerSelectionName.clear();
+        agentSelectionButtons.clear();
         agentItemPanels.clear();
         playerPanel.removeAll();
 
-        advancedPlayerSelectionGroup = new ButtonGroup();
+        agentSelectionGroup = new ButtonGroup();
         if (maze != null) {
             levelChoicesComboBoxes.get(1).setSelectedItem(mazeName);
             selectPlayerLabel.setText("Select player for \"" + mazeName + "\":");
             for (int i = 0; i < Math.min(maze.getPacmanStartLocation().length,
                 PacmanAgent.NAMES.length); i++) {
                 JRadioButton selectAgentButton = new JRadioButton();
-                advancedPlayerSelectionGroup.add(selectAgentButton);
-                advancedPlayerSelectionName.put(selectAgentButton,
+                agentSelectionGroup.add(selectAgentButton);
+                agentSelectionButtons.put(selectAgentButton,
                     PacmanAgent.NAMES[i]);
                 AgentItemPanel agentPanel =
                     new AgentItemPanel(PacmanAgent.NAMES[i], selectAgentButton);
@@ -762,8 +793,8 @@ public class GUIViewer extends JFrame implements UserInteraction {
             for (int i = 0; i < Math.min(maze.getGhostsStartLocation().length,
                 GhostAgent.NAMES.length); i++) {
                 JRadioButton selectAgentButton = new JRadioButton();
-                advancedPlayerSelectionGroup.add(selectAgentButton);
-                advancedPlayerSelectionName.put(selectAgentButton, GhostAgent.NAMES[i]);
+                agentSelectionGroup.add(selectAgentButton);
+                agentSelectionButtons.put(selectAgentButton, GhostAgent.NAMES[i]);
                 AgentItemPanel agentPanel =
                     new AgentItemPanel(GhostAgent.NAMES[i], selectAgentButton);
                 agentPanel.addComboBoxActionListener(e -> {
@@ -1050,6 +1081,21 @@ public class GUIViewer extends JFrame implements UserInteraction {
     }
 
     /**
+     * Stops the game.
+     */
+    public void stopMoving() {
+        for (PacmanAgent agent: pacmanAgents.values()) {
+            agent.stop();
+        }
+        pacmanAgents.clear();
+        for (GhostAgent agent: ghostAgents.values()) {
+            agent.stop();
+        }
+        ghostAgents.clear();
+        backgroundMusic.stop();
+    }
+
+    /**
      * Updates the score panel.
      *
      * @param scoresTotal the total score earned
@@ -1098,7 +1144,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         if (self instanceof GhostAgent) {
             isLocalSideWin = !isLocalSideWin;
         }
-        Object[] options = {"Restart the game", "Disconnect", "Close the game"};
+        Object[] options = {"Go back to main menu", "Disconnect", "Close the game"};
         String message;
         if (isLocalSideWin == null) {
             message = "DRAW";
@@ -1233,7 +1279,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @param token the name of the agent
      */
     public void unselectPlayer(final String token) {
-        advancedPlayerSelectionGroup.clearSelection();
+        agentSelectionGroup.clearSelection();
     }
 
     /**
@@ -1288,7 +1334,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @param ghostName the name the name of ghost
      */
     public void aiTakeOver(String ghostName) {
-        ((ControlledGhostAgent) ghostAgents.get(ghostName)).aiTakeOver();
+        ((UserControlledGhostAgent) ghostAgents.get(ghostName)).aiTakeOver();
         notification("Ghost \"" + ghostName + "\" is now controlled by AI");
     }
 
@@ -1298,7 +1344,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @param pacmanIndex the index of pacman
      */
     public void aiTakeOver(int pacmanIndex) {
-        ((ControlledPacmanAgent) pacmanAgents.get(pacmanIndex)).aiTakeOver();
+        ((UserControlledPacmanAgent) pacmanAgents.get(pacmanIndex)).aiTakeOver();
         notification("Pacman is now controlled by AI");
     }
 

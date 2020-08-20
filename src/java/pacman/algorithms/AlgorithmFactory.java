@@ -18,7 +18,7 @@ public class AlgorithmFactory {
     protected Maze maze;
 
     /** Applying the Interning Pattern and stores existing instances. */
-    private HashMap<String, AbstractAlgorithm> library;
+    private final HashMap<String, AbstractAlgorithm> library;
 
     /**
      * Contains the list of supported algorithms in this application.
@@ -89,6 +89,7 @@ public class AlgorithmFactory {
                     entry(NULL_ALGORITHM, NULL_ARG_GENERATOR),
                     entry(RANDOM_ALGORITHM, RANDOM_ALG_GENERATOR),
                     entry(DFS_ALGORITHM, DFS_ALG_GENERATOR),
+                    // entry(MINIMAX_ALGORITHM, MINIMAX_ALG_GENERATOR),  // Not supported
                     entry(GREEDY_ALGORITHM, GREEDY_ALG_GENERATOR)
         );
     }

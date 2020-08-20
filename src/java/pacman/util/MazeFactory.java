@@ -14,7 +14,6 @@ import java.util.Set;
 import pacman.model.Coordinate;
 import pacman.model.Maze;
 
-
 /**
  * A class used to construct a maze, either from local file or from a string.
  *

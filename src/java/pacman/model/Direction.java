@@ -3,7 +3,7 @@ package pacman.model;
 /**
  * Represents a direction of moving in the maze.
  *
- * @version 1.0
+ * @version 1.1
  */
 public enum Direction {
     /** Direction up. */

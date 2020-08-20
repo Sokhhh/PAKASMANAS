@@ -91,6 +91,7 @@ public abstract class AbstractAgent extends JLabel {
      * Contains the algorithm chosen for determining next move.
      */
     protected final AbstractAlgorithm algorithm;
+
     private java.util.Timer hold;
 
     /**
@@ -360,7 +361,9 @@ public abstract class AbstractAgent extends JLabel {
             animation.stop();
         }
         setMazeLocation(Integer.parseInt(x), Integer.parseInt(y));
-        controller.agentVisit(AbstractAgent.this, coordinateX, coordinateY);
+        coordinateX = Integer.parseInt(x);
+        coordinateY = Integer.parseInt(y);
+        controller.agentVisit(this, coordinateX, coordinateY);
         autoMoving.start();
         direction = d;
         directionChanged = true;
