@@ -1,5 +1,6 @@
 # Pacman
 This project implements the classic game Pac-Man using Java
+![](data/preview_for_sample.png)
 
 ## Overview
 Pacman is a maze chase game developed in 1980s
@@ -41,7 +42,8 @@ This application also supports:
 
 ## Future Development 
 - Improve AI algorithms
-- Add encryption on network datagrams
+- Add encryption on networking datagrams
+- Redesign UI
 - Optimization
     
 
