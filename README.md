@@ -35,10 +35,10 @@ This application also supports:
         - Command pattern
 
 ## Documentation
-- User manual is located under docs/
-- Javadocs are located under docs/javadoc
-- Installation and deployment guide and other related information is located under docs/readme.txt
-- Installation scripts are under scripts/
+- User manual is located under `docs/`
+- Javadocs are located under `docs/javadoc`
+- Installation and deployment guide and other related information are located under `docs/readme.txt`
+- Installation scripts are under `scripts/`
 
 ## Future Development 
 - Improve AI algorithms
