@@ -9,7 +9,7 @@ import pacman.model.Maze;
  *
  * @version 1.0
  */
-public class MinimaxAlgorithm extends AStar {
+public class MinimaxAlgorithm extends AStarAlgorithm {
     /** Contains the depths of the search. */
     private int depth = 2;
 

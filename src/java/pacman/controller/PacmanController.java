@@ -17,7 +17,7 @@ import pacman.agents.AbstractAgent;
 import pacman.agents.GhostAgent;
 import pacman.agents.PacmanAgent;
 import pacman.algorithms.AlgorithmFactory;
-import pacman.algorithms.AStar;
+import pacman.algorithms.AStarAlgorithm;
 import pacman.model.Coordinate;
 import pacman.model.Direction;
 import pacman.model.Maze;
@@ -810,7 +810,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
         this.maze.pacmanVisit(0, pacman.get(0).getX(),
             pacman.get(0).getY());
         this.view.addPacman(maze, pacman.get(0).getX(), pacman.get(0).getY(), 0,
-            new AStar(maze), true, false);
+            new AStarAlgorithm(maze), true, false);
     }
 
     /**
@@ -824,7 +824,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
             this.maze.ghostVisit(GhostAgent.NAMES[i], ghosts.get(i).getX(),
                 ghosts.get(i).getY());
             this.view.addGhost(maze, ghosts.get(i).getX(), ghosts.get(i).getY(),
-                GhostAgent.NAMES[i], new AStar(maze), false, false);
+                GhostAgent.NAMES[i], new AStarAlgorithm(maze), false, false);
         }
     }
 
