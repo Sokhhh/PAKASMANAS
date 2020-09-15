@@ -79,7 +79,7 @@ public class AlgorithmFactory {
          * at each step.
          */
         private static final Function<Maze, AbstractAlgorithm> A_STAR_ALG_GENERATOR =
-            AStarAlgorithm::new;
+            AStar::new;
 
         /**
          * An algorithm that let the agent applies the greedy algorithm at each
