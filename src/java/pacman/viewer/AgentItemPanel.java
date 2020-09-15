@@ -40,7 +40,7 @@ public class AgentItemPanel extends JPanel {
         // this.add(iconChoices);
         this.name = name;
         JLabel nameLabel = new JLabel(StringUtilities.capitalize(name)
-                + (isGhost ? " ghost" : ""));
+            + (isGhost ? " ghost" : ""));
         nameLabel.setForeground(PacmanTheme.WELCOME_TEXT);
         nameLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
         this.add(nameLabel);
@@ -60,7 +60,7 @@ public class AgentItemPanel extends JPanel {
      */
     private static JComboBox<String> createIconSelectionBox(boolean isGhost) {
         throw new UnsupportedOperationException("Changing agent icon is currently "
-                + "not supported");
+            + "not supported");
         /*
         JComboBox<String> ret =
                 GuiComponentFactory.createComboBox(PacmanTheme.BUTTON_HOVERED,
@@ -84,13 +84,13 @@ public class AgentItemPanel extends JPanel {
      */
     private static JComboBox<String> createAlgorithmSelectionBox() {
         JComboBox<String> ret =
-                GuiComponentFactory.createComboBox(PacmanTheme.BUTTON_HOVERED,
-                        PacmanTheme.WELCOME_BACKGROUND, PacmanTheme.WELCOME_TEXT);
+            GuiComponentFactory.createComboBox(PacmanTheme.BUTTON_HOVERED,
+                PacmanTheme.WELCOME_BACKGROUND, PacmanTheme.WELCOME_TEXT);
         // Items
         for (String algorithm: AlgorithmFactory.SupportedAlgorithms.values.keySet()) {
             ret.addItem(algorithm);
         }
-        ret.setSelectedItem(AlgorithmFactory.SupportedAlgorithms.GREEDY_ALGORITHM);
+        ret.setSelectedItem(AlgorithmFactory.SupportedAlgorithms.A_STAR_ALGORITHM);
         ret.setFont(new Font("SansSerif", Font.PLAIN, 16));
         return ret;
     }
@@ -162,6 +162,6 @@ public class AgentItemPanel extends JPanel {
     @Override
     public String toString() {
         return "AgentItem {name=" + name + ", algorithm=" + getAlgorithmName()
-                + ", selected=" + check.isSelected();
+            + ", selected=" + check.isSelected();
     }
 }

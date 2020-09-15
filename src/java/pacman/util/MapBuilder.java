@@ -44,12 +44,18 @@ public class MapBuilder {
      * @param <K> the Map's key type
      * @param <V> the Map's value type
      * @return a {@code Map} containing the specified mappings
+     * @throws IllegalArgumentException if entries contains duplicate keys
      */
     @SafeVarargs
-    public static <K, V> Map<K, V> map(Map.Entry<K, V>... entries) {
+    public static <K, V> Map<K, V> map(Map.Entry<K, V>... entries)
+        throws IllegalArgumentException {
         Map<K, V> result = new LinkedHashMap<>();
 
         for (Map.Entry<K, V> entry : entries) {
+            if (result.containsKey(entry.getKey())) {
+                throw new IllegalArgumentException(
+                    "Duplicate key found for \"" + entry.getKey() +"\"");
+            }
             result.put(entry.getKey(), entry.getValue());
         }
 

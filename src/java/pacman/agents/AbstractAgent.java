@@ -15,6 +15,7 @@ import pacman.controller.PacmanMazeController;
 import pacman.model.Coordinate;
 import pacman.model.Direction;
 import pacman.model.Maze;
+import pacman.util.Logger;
 
 /**
  * This is a component that shows a character (ghost/pacman) in the game with moving
@@ -381,7 +382,9 @@ public abstract class AbstractAgent extends JLabel {
         }
         setMazeLocation(Integer.parseInt(x), Integer.parseInt(y));
         setVisible(true);
-        controller.agentVisit(AbstractAgent.this, coordinateX, coordinateY);
+        coordinateX = Integer.parseInt(x);
+        coordinateY = Integer.parseInt(y);
+        controller.agentVisit(this, coordinateX, coordinateY);
         if (hold != null) {
             autoMoving.start();
         }

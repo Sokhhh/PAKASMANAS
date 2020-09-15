@@ -1,0 +1,14 @@
+battleship.components
+epidemics.model
+gol.viewer
+golgui.components
+golgui.utils
+golgui.viewer
+pacman
+pacman.agents
+pacman.algorithms
+pacman.controller
+pacman.model
+pacman.network
+pacman.util
+pacman.viewer

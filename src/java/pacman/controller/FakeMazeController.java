@@ -58,6 +58,6 @@ public class FakeMazeController implements PacmanMazeController {
      */
     @Override
     public void notifyLocationChange(final int x, final int y, final AbstractAgent agent) {
-
+        // Ignored
     }
 }

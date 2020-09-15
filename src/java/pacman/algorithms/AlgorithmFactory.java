@@ -30,7 +30,7 @@ public class AlgorithmFactory {
 
         /** Creator of an algorithm that let the agent stay still at any time. */
         private static final Function<Maze, AbstractAlgorithm> NULL_ARG_GENERATOR =
-                NullAlgorithm::new;
+            NullAlgorithm::new;
 
         /** An algorithm that let the agent random choose an action at each step. */
         public static final String RANDOM_ALGORITHM = "Random walk";
@@ -40,7 +40,7 @@ public class AlgorithmFactory {
          * each step.
          */
         private static final Function<Maze, AbstractAlgorithm> RANDOM_ALG_GENERATOR =
-                RandomSelectionAlgorithm::new;
+            RandomSelectionAlgorithm::new;
 
         /**
          * An algorithm that let the agent applies the dfs algorithm at each
@@ -53,7 +53,7 @@ public class AlgorithmFactory {
          * at each step.
          */
         private static final Function<Maze, AbstractAlgorithm> DFS_ALG_GENERATOR =
-                DfsAlgorithm::new;
+            DfsAlgorithm::new;
 
         /**
          * An algorithm that let the agent applies the greedy algorithm at each
@@ -66,7 +66,20 @@ public class AlgorithmFactory {
          * at each step.
          */
         private static final Function<Maze, AbstractAlgorithm> GREEDY_ALG_GENERATOR =
-                GreedyAlgorithm::new;
+            GreedyAlgorithm::new;
+
+        /**
+         * An algorithm that let the agent applies the A* algorithm at each
+         * step.
+         */
+        public static final String A_STAR_ALGORITHM = "A* search algorithm";
+
+        /**
+         * Creator of an algorithm that let the agent applies the A* algorithm
+         * at each step.
+         */
+        private static final Function<Maze, AbstractAlgorithm> A_STAR_ALG_GENERATOR =
+            AStarAlgorithm::new;
 
         /**
          * An algorithm that let the agent applies the greedy algorithm at each
@@ -79,18 +92,19 @@ public class AlgorithmFactory {
          * at each step.
          */
         private static final Function<Maze, AbstractAlgorithm> MINIMAX_ALG_GENERATOR =
-                MinimaxAlgorithm::new;
+            MinimaxAlgorithm::new;
 
         /**
          * Contains a map to get the generators.
          */
         public static final Map<String, Function<Maze, AbstractAlgorithm>> values
-                = MapBuilder.map(
-                    entry(NULL_ALGORITHM, NULL_ARG_GENERATOR),
-                    entry(RANDOM_ALGORITHM, RANDOM_ALG_GENERATOR),
-                    entry(DFS_ALGORITHM, DFS_ALG_GENERATOR),
-                    // entry(MINIMAX_ALGORITHM, MINIMAX_ALG_GENERATOR),  // Not supported
-                    entry(GREEDY_ALGORITHM, GREEDY_ALG_GENERATOR)
+            = MapBuilder.map(
+            entry(NULL_ALGORITHM, NULL_ARG_GENERATOR),
+            entry(RANDOM_ALGORITHM, RANDOM_ALG_GENERATOR),
+            entry(DFS_ALGORITHM, DFS_ALG_GENERATOR),
+            entry(A_STAR_ALGORITHM, A_STAR_ALG_GENERATOR)
+            // entry(GREEDY_ALGORITHM, GREEDY_ALG_GENERATOR),
+            // entry(MINIMAX_ALGORITHM, MINIMAX_ALG_GENERATOR)  // Not supported
         );
     }
 

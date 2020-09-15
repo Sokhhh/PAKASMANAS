@@ -90,7 +90,7 @@ public class MazePanel extends JPanel {
                     g2d.fillOval(drawX + BLOCK_SIZE / 2 - FOOD_RADIUS / 2,
                         drawY + BLOCK_SIZE / 2 - FOOD_RADIUS / 2, FOOD_RADIUS,
                         FOOD_RADIUS);
-                } else if (maze.get(x, y) == Maze.PELLETS) {
+                } else if (maze.get(x, y) == Maze.PELLET) {
                     g2d.fillOval(drawX + BLOCK_SIZE / 2 - PELLETS_RADIUS / 2,
                         drawY + BLOCK_SIZE / 2 - PELLETS_RADIUS / 2, PELLETS_RADIUS,
                         PELLETS_RADIUS);

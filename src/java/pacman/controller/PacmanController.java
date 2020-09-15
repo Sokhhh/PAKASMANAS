@@ -10,24 +10,20 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.prefs.Preferences;
 import pacman.agents.AbstractAgent;
 import pacman.agents.GhostAgent;
 import pacman.agents.PacmanAgent;
 import pacman.algorithms.AlgorithmFactory;
-import pacman.algorithms.GreedyAlgorithm;
+import pacman.algorithms.AStarAlgorithm;
 import pacman.model.Coordinate;
 import pacman.model.Direction;
 import pacman.model.Maze;
+import pacman.model.MazeFactory;
 import pacman.network.SimpleP2PServer;
 import pacman.util.Logger;
-import pacman.util.MazeFactory;
 import pacman.util.StringUtilities;
 import pacman.viewer.AgentItemPanel;
 import pacman.viewer.GUIViewer;
@@ -138,9 +134,9 @@ public class PacmanController implements PacmanMazeController, NetworkController
             this.server = new SimpleP2PServer(this);
         } catch (IOException | SecurityException e) {
             (new GuiMessenger(null)).notification("Trying to connect to the "
-                    + "internet...");
+                + "internet...");
             (new GuiMessenger(null)).alert("Network connection failed. "
-                    + "Please check your network and firewall settings");
+                + "Please check your network and firewall settings");
         }
         agentNameClientAddressMap = new HashMap<>();
         clientAddressToAgentNameMap = new HashMap<>();
@@ -178,7 +174,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
         try {
             if (!preConfiguredMazeName.equals(MazeFactory.CUSTOM_MAZE_NAME)) {
                 this.maze = MazeFactory.readBoardFromString(
-                        MazeFactory.PreConfiguredMaze.ITEMS.get(preConfiguredMazeName));
+                    MazeFactory.PreConfiguredMaze.ITEMS.get(preConfiguredMazeName));
             } else {
                 this.maze = MazeFactory.readBoardFromFile(filename);
             }
@@ -186,10 +182,10 @@ public class PacmanController implements PacmanMazeController, NetworkController
         } catch (IOException e) {
             if (this.view != null) {
                 this.view.alert(
-                        "Failed to load from file \"" + filename + "\":" + e.getMessage());
+                    "Failed to load from file \"" + filename + "\":" + e.getMessage());
             } else {
                 System.err.println(
-                        "Failed to load from file \"" + filename + "\":" + e.getMessage());
+                    "Failed to load from file \"" + filename + "\":" + e.getMessage());
             }
         }
         return false;
@@ -204,7 +200,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
      *                 does not choose a custom maze
      */
     public void advancedLoad(final String preConfiguredMazeName,
-                                final String filename) {
+        final String filename) {
         if (preConfiguredMazeName.equals(MazeFactory.CUSTOM_MAZE_NAME) && isServerStarted()) {
             view.alert("Cannot use a custom maze in multiplayer mode. You need to "
                 + "disconnect and shutdown the server first");
@@ -305,7 +301,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
             this.server.closeAllConnection();
         } catch (IOException e) {
             this.view.alert("<html> Failed to change port due to system restriction. "
-                    + "</html>");
+                + "</html>");
             return false;
         }
         if (!StringUtilities.isInteger(port)) {
@@ -316,23 +312,23 @@ public class PacmanController implements PacmanMazeController, NetworkController
         int portNum = Integer.parseInt(port);
         if (portNum < 0 || portNum > 65535) {
             this.view.alert("Port number should be a number between 1024 and 65535, "
-                    + "inclusive.");
+                + "inclusive.");
             return false;
         }
         if (portNum < 1024 && portNum != 0) {
             this.view.alert("Port number under 1024 is reserved for the system. "
-                    + "Please select another port.");
+                + "Please select another port.");
             return false;
         }
         try {
             this.server.startListening(portNum);
         } catch (IOException | SecurityException e) {
             this.view.alert("Connection denied by system security restrictions. "
-                    + "Please restart the application.");
+                + "Please restart the application.");
             return false;
         } catch (IllegalArgumentException e) {
             this.view.alert("Port number should be a number between 1024 and 65535, "
-                    + "inclusive.");
+                + "inclusive.");
             return false;
         }
         return true;
@@ -348,8 +344,8 @@ public class PacmanController implements PacmanMazeController, NetworkController
     @Override
     public boolean incomingConnection(SocketAddress remoteSocketAddress, int port) {
         if (this.view.ask(
-                "<html>Receive an incoming connection from " + remoteSocketAddress.toString()
-                        + ". <br> Do you want to connect?</html>")) {
+            "<html>Receive an incoming connection from " + remoteSocketAddress.toString()
+                + ". <br> Do you want to connect?</html>")) {
             this.view.incomingConnection(remoteSocketAddress, port);
             try {
                 this.server.confirmConnection(remoteSocketAddress);
@@ -360,7 +356,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
                 }
             } catch (IOException e) {
                 this.view.alert("Failed to send confirm due to poor "
-                        + "connection.");
+                    + "connection.");
             }
             return true;
         } else {
@@ -368,7 +364,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
                 this.server.closeConnection(remoteSocketAddress);
             } catch (IOException e) {
                 this.view.alert("<html>Failure when denying the connection. "
-                        + "<br>Please restart the application.</html>");
+                    + "<br>Please restart the application.</html>");
             }
             return false;
         }
@@ -407,12 +403,12 @@ public class PacmanController implements PacmanMazeController, NetworkController
         int portNum = Integer.parseInt(port);
         if (portNum < 0 || portNum > 65535) {
             this.view.alert("Port number should be a number between 1024 and 65535, "
-                    + "inclusive.");
+                + "inclusive.");
             return false;
         }
         if (portNum < 1024) {
             this.view.alert("Port number under 1024 is reserved for the system. "
-                    + "Please select another port.");
+                + "Please select another port.");
             return false;
         }
         // Connection
@@ -460,7 +456,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
             }
         } catch (IOException | SecurityException e) {
             this.view.alert("Failed to close the connection and restart server for "
-                    + "listening.");
+                + "listening.");
         }
     }
 
@@ -614,18 +610,15 @@ public class PacmanController implements PacmanMazeController, NetworkController
                     Logger.err("Length < 3");
                     return;
                 }
-                String direction = tokens[1];
+                final String direction = tokens[1];
                 String agentName = tokens[2];
                 boolean isPacman = StringUtilities.isInteger(agentName);
-                String x = tokens[3];
-                String y = tokens[4];
                 boolean shouldJump = false;
                 if (isServerNode()) {
                     // Only cares the info from who controls this agent
                     if (isPacman) {
-                        shouldJump =
-                            !from.equals(
-                                agentNameClientAddressMap.get(PacmanAgent.NAMES[0]));
+                        shouldJump = !from.equals(
+                            agentNameClientAddressMap.get(PacmanAgent.NAMES[0]));
                     } else {
                         shouldJump =
                             !from.equals(agentNameClientAddressMap.get(agentName));
@@ -653,6 +646,8 @@ public class PacmanController implements PacmanMazeController, NetworkController
                         }
                     }
                 }
+                String x = tokens[3];
+                String y = tokens[4];
                 view.immediateDirectionChange(direction, x, y, agentName);
                 break;
             case Tags.LOCATION:
@@ -815,7 +810,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
         this.maze.pacmanVisit(0, pacman.get(0).getX(),
             pacman.get(0).getY());
         this.view.addPacman(maze, pacman.get(0).getX(), pacman.get(0).getY(), 0,
-            new GreedyAlgorithm(maze), true, false);
+            new AStarAlgorithm(maze), true, false);
     }
 
     /**
@@ -829,7 +824,7 @@ public class PacmanController implements PacmanMazeController, NetworkController
             this.maze.ghostVisit(GhostAgent.NAMES[i], ghosts.get(i).getX(),
                 ghosts.get(i).getY());
             this.view.addGhost(maze, ghosts.get(i).getX(), ghosts.get(i).getY(),
-                GhostAgent.NAMES[i], new GreedyAlgorithm(maze), false, false);
+                GhostAgent.NAMES[i], new AStarAlgorithm(maze), false, false);
         }
     }
 
@@ -1063,13 +1058,13 @@ public class PacmanController implements PacmanMazeController, NetworkController
         int scoresDiff = 0;
         if (agent instanceof PacmanAgent) {
             // If pellets is hit, scare the ghosts and turn pacman into ghost buster
-            if (maze.get(x, y) == Maze.PELLETS) {
+            if (maze.get(x, y) == Maze.PELLET) {
                 Logger.printlnf("Ghost buster!");
                 this.hitPellets();
             }
             // Update location and scores
             scoresDiff += maze.pacmanVisit(((PacmanAgent) agent).getIndex(),
-                    x, y);
+                x, y);
             // Check if the curr location is the same as any ghost
             for (String ghostName: maze.getVisibleGhostNames()) {
                 if (maze.getGhostsLocation().get(ghostName).equals(new Coordinate(x, y))) {

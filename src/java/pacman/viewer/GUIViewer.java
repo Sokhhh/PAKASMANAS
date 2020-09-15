@@ -52,8 +52,9 @@ import javax.swing.JSeparator;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import pacman.agents.AbstractAgent;
 import pacman.agents.ControlledGhostAgent;
 import pacman.agents.ControlledPacmanAgent;
@@ -70,11 +71,11 @@ import pacman.controller.PacmanController;
 import pacman.model.Coordinate;
 import pacman.model.Direction;
 import pacman.model.Maze;
+import pacman.model.MazeFactory;
 import pacman.network.SimpleP2PServer;
 import pacman.util.ImageInterning;
 import pacman.util.Logger;
-import pacman.util.MazeFactory;
-import pacman.util.Music;
+import pacman.util.MusicWrapper;
 import pacman.util.PacmanTheme;
 import pacman.util.StringUtilities;
 
@@ -98,7 +99,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
     /**
      * Background music of the game.
      */
-    private Music backgroundMusic;
+    private MusicWrapper backgroundMusic;
 
     /**
      * A panel during the game showing the maze.
@@ -130,7 +131,16 @@ public class GUIViewer extends JFrame implements UserInteraction {
      */
     private KeyboardControlledAgent self;
 
+    /**
+     * Contains combo boxes in the start panels to let user choose a maze. Index 0
+     * stands for the normal start panel and index 1 stands for the advanced start panel.
+     */
     private List<JComboBox<String>> levelChoicesComboBoxes;
+
+    /**
+     * Contains input fields that user specifies the custom maze file. Index 0
+     * stands for the normal start panel and index 1 stands for the advanced start panel.
+     */
     private List<JTextField> customInputFileTextFields;
 
     /** Contains a panel handling the local network address. */
@@ -142,8 +152,19 @@ public class GUIViewer extends JFrame implements UserInteraction {
     /** Contains a panel showing the network connection status. */
     private NetworkStatusPanel networkStatusPanel;
 
+    /**
+     * Contains the content pane of game start.
+     */
     private JPanel startupContentPane;
+
+    /**
+     * Contains the content pane of advanced start configuration.
+     */
     private JPanel networkSelectorContentPane;
+
+    /**
+     * Contains a panel to show list of connecting clients.
+     */
     private JPanel clientListPanel;
 
     /**
@@ -156,7 +177,9 @@ public class GUIViewer extends JFrame implements UserInteraction {
      */
     private JPanel levelPanel;
 
-    /** Contains a label to tell the user to choose an agent. */
+    /**
+     * Contains a label to tell the user to choose an agent.
+     */
     private JLabel selectPlayerLabel;
 
     /**
@@ -200,6 +223,13 @@ public class GUIViewer extends JFrame implements UserInteraction {
                 controller.exit();
             }
         });
+
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException
+            | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -224,7 +254,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
         this.pack();
 
         try {
-            backgroundMusic = new Music(GUIViewer.class.getResource("/sounds"
+            backgroundMusic = new MusicWrapper(GUIViewer.class.getResource("/sounds"
                     + "/PacMan_Original_Theme.wav").toURI());
         } catch (URISyntaxException e) {
             e.printStackTrace();
@@ -459,8 +489,8 @@ public class GUIViewer extends JFrame implements UserInteraction {
         customLabel.setForeground(PacmanTheme.WELCOME_TEXT);
         customLabel.setFont(new Font("SansSerif", Font.PLAIN, 18));
 
-        JTextField customInputFileTextField = new JTextField(settings.get(
-                "InputFile", ""));
+        JTextField customInputFileTextField = new JTextField(20);
+        customInputFileTextField.setText(settings.get("InputFile", ""));
         customInputFileTextField.setFont(new Font("SansSerif", Font.PLAIN, 18));
         customInputFileTextField.setBackground(PacmanTheme.WELCOME_BACKGROUND);
         customInputFileTextField.setForeground(PacmanTheme.WELCOME_TEXT);
@@ -483,12 +513,12 @@ public class GUIViewer extends JFrame implements UserInteraction {
             @Override
             public void actionPerformed(ActionEvent e) {
                 File input = new LocalFileOperator(customInputFileTextField.getText())
-                        .browseInputFile(GUIViewer.this,
-                                new FileNameExtensionFilter("CSV "
-                                        + "Format (*.csv)", "csv"));
+                        .browseInputFile(GUIViewer.this);
                 if (input == null) {
                     return;
                 }
+                customInputFileTextField.setText(input.toString());
+                settings.put("InputFile", input.toString());
                 Logger.println(
                         "Attempt to read from input file " + customInputFileTextField.getText());
             }
@@ -877,7 +907,7 @@ public class GUIViewer extends JFrame implements UserInteraction {
      * @param maze the maze of the game
      */
     public void start(final Maze maze) {
-        // Music
+        // MusicWrapper
         backgroundMusic.start();
 
         // Interface

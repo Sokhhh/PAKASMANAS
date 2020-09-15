@@ -10,7 +10,8 @@ import java.util.IllegalFormatException;
  */
 public class Logger {
     /** Contains a flag that if log should be printed. */
-    public static boolean LOG_ENABLED = true;
+    public static boolean LOG_ENABLED = false;
+
     /** Contains a flag that if stack trace should be printed. */
     public static boolean LOG_DETAIL = true;
 

@@ -69,7 +69,7 @@ public class Maze {
     public static final int FOOD = 1;
 
     /** Represents that the cell is occupied by a power pellet. */
-    public static final int PELLETS = 2;
+    public static final int PELLET = 2;
 
     /** Represents that the cell is occupied by a pacman. */
     public static final int PACMAN = 3;
@@ -146,7 +146,7 @@ public class Maze {
             for (int x = 0; x < this.data[y].length; x++) {
                 if (this.data[y][x] == Maze.FOOD) {
                     foods.add(new Coordinate(x, y));
-                } else if (this.data[y][x] == Maze.PELLETS) {
+                } else if (this.data[y][x] == Maze.PELLET) {
                     pellets.add(new Coordinate(x, y));
                 } else if (this.data[y][x] == Maze.WALL) {
                     walls.add(new Coordinate(x, y));
@@ -391,7 +391,7 @@ public class Maze {
      * @effects None
      * @return the content of the block located at (x, y). Should be one of
      *       {@link #INVALID}, {@link #WALL}, {@link #EMPTY}, {@link #FOOD},
-     *       {@link #PELLETS}
+     *       {@link #PELLET}
      */
     public int get(int x, int y) {
         if (y < 0 || y >= height || x < 0 || x >= width) {
@@ -410,7 +410,7 @@ public class Maze {
      * @effects None
      * @return the content of the block located at (x, y). Should be one of
      *       {@link #INVALID}, {@link #WALL}, {@link #EMPTY}, {@link #FOOD},
-     *       {@link #PELLETS}, {@link #PACMAN}, {@link #GHOST}
+     *       {@link #PELLET}, {@link #PACMAN}, {@link #GHOST}
      */
     public int get(Coordinate pos) {
         if (pacmanLocations.containsValue(pos)) {
@@ -552,9 +552,9 @@ public class Maze {
                 foods.remove(new Coordinate(x, y));
                 scores += SCORES[FOOD];
                 break;
-            case PELLETS:
+            case PELLET:
                 pellets.remove(new Coordinate(x, y));
-                scores += SCORES[PELLETS];
+                scores += SCORES[PELLET];
                 break;
             case EMPTY:
             case PACMAN:

@@ -38,9 +38,9 @@ public class DfsAlgorithm extends AbstractAlgorithm {
         if (nextDirections.contains(current)) {
             return current;
         } else {
-            for (int i = 0; i < nextDirections.size(); i++) {
-                if (nextDirections.get(i).reverse() != current) {
-                    return nextDirections.get(i);
+            for (Direction nextDirection : nextDirections) {
+                if (nextDirection.reverse() != current) {
+                    return nextDirection;
                 }
             }
             return nextDirections.get(0);

@@ -14,6 +14,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import pacman.util.StringUtilities;
+import pacman.viewer.PacmanViewUtility;
 
 /**
  * Contains a panel for showing a network address.
@@ -64,6 +65,8 @@ public class NetworkAddressPanel extends JPanel {
 
         // Confirmation button
         this.applyBtn = new JButton("APPLY");
+        PacmanViewUtility.addMouseHoveringEffectAtStart(applyBtn);
+        this.applyBtn.setFont(new Font("Dialog", Font.PLAIN, 17));
         this.portField = new JTextField(5);
         this.portField.setMinimumSize(new Dimension(0, applyBtn.getHeight()));
 

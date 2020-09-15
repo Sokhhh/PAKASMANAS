@@ -497,8 +497,6 @@ public class SimpleP2PServer {
      */
     public void broadcast(String... message) throws IOException {
         if (this.connectionSockets.isEmpty()) {
-            Logger.println("Cannot send message \"" + Arrays.toString(message) + "\" without "
-                + "connection.");
             return;
         }
         for (Socket client: this.connectionSockets.values()) {

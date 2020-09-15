@@ -9,7 +9,7 @@ import pacman.model.Maze;
  *
  * @version 1.0
  */
-public class MinimaxAlgorithm extends GreedyAlgorithm {
+public class MinimaxAlgorithm extends AStarAlgorithm {
     /** Contains the depths of the search. */
     private int depth = 2;
 
@@ -56,7 +56,7 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
      * @return the minimax evaluation score for the current state
      */
     double minimax(int x, int y, int currDepth, boolean isMaximizing,
-                  int agentIndex) {
+        int agentIndex) {
         if (currDepth == 0 || maze.isWin(x, y) || maze.isLose(x, y)) {
             return pacmanEvaluationFunction(agentIndex, x, y);
         }
@@ -64,14 +64,14 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
             double value = Double.MIN_VALUE;
             for (Direction action : maze.getLegalActions(x, y)) {
                 value = Math.min(value, minimax(x + action.getDirectionX(),
-                        y + action.getDirectionY(), currDepth - 1, MAX, agentIndex));
+                    y + action.getDirectionY(), currDepth - 1, MAX, agentIndex));
             }
             return value;
         } else {                         // minimizing
             double value = Double.MAX_VALUE;
             for (Direction action : maze.getLegalActions(x, y)) {
                 value = Math.max(value, minimax(x + action.getDirectionX(),
-                        y + action.getDirectionY(), currDepth - 1, MIN, agentIndex));
+                    y + action.getDirectionY(), currDepth - 1, MIN, agentIndex));
             }
             return value;
         }
@@ -106,7 +106,7 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
      * @return the minimax evaluation score for the current state
      */
     double minimax(int x, int y, int currDepth, boolean isMaximizing,
-                   String agentName, boolean isScared) {
+        String agentName, boolean isScared) {
         if (currDepth == 0 || maze.isWin(x, y) || maze.isLose(x, y)) {
             return ghostEvaluationFunction(agentName, x, y, isScared);
         }
@@ -114,16 +114,16 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
             double value = Double.MIN_VALUE;
             for (Direction action : maze.getLegalActions(x, y)) {
                 value = Math.min(value, minimax(x + action.getDirectionX(),
-                        y + action.getDirectionY(), currDepth - 1, MAX, agentName,
-                        isScared));
+                    y + action.getDirectionY(), currDepth - 1, MAX, agentName,
+                    isScared));
             }
             return value;
         } else {                         // minimizing
             double value = Double.MAX_VALUE;
             for (Direction action : maze.getLegalActions(x, y)) {
                 value = Math.max(value, minimax(x + action.getDirectionX(),
-                        y + action.getDirectionY(), currDepth - 1, MIN, agentName,
-                        isScared));
+                    y + action.getDirectionY(), currDepth - 1, MIN, agentName,
+                    isScared));
             }
             return value;
         }
@@ -140,12 +140,12 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
      */
     @Override
     public Direction getPacmanAction(int pacmanIndex, int x, int y,
-                                     Direction current) {
+        Direction current) {
         Direction ret = Direction.STOP;
         double score = 0;
         for (Direction d: maze.getLegalActions(x, y)) {
             if (minimax(x + d.getDirectionX(), y + d.getDirectionY(), depth, MIN,
-                    pacmanIndex) > score) {
+                pacmanIndex) > score) {
                 ret = d;
             }
         }
@@ -164,12 +164,12 @@ public class MinimaxAlgorithm extends GreedyAlgorithm {
      */
     @Override
     public Direction getGhostAction(String ghostName, int x, int y,
-                                          Direction current, boolean isScared) {
+        Direction current, boolean isScared) {
         Direction ret = Direction.STOP;
         double score = 0;
         for (Direction d: maze.getLegalActions(x, y)) {
             if (minimax(x + d.getDirectionX(), y + d.getDirectionY(), depth, MIN,
-                    ghostName, isScared) > score) {
+                ghostName, isScared) > score) {
                 ret = d;
             }
         }
